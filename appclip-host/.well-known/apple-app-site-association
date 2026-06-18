@@ -1,0 +1,22 @@
+{
+  "appclips": {
+    "apps": [
+      "SG5KFF22Y9.com.novaheronix.wifimanager.Clip"
+    ]
+  },
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "SG5KFF22Y9.com.novaheronix.wifimanager"
+        ],
+        "components": [
+          {
+            "/": "/wifi",
+            "comment": "App Clip and main app both handle /wifi paths"
+          }
+        ]
+      }
+    ]
+  }
+}

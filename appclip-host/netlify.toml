@@ -1,0 +1,17 @@
+# Netlify Drop skips hidden folders like .well-known on macOS.
+# Serve the visible file at the exact path Apple requires.
+[[redirects]]
+  from = "/.well-known/apple-app-site-association"
+  to = "/apple-app-site-association"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
+
+[[headers]]
+  for = "/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
