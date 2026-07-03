@@ -3,32 +3,16 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/wifi_network.dart';
 import '../services/storage_service.dart';
+import '../theme/app_components.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
-import 'network_detail_screen.dart';
-import 'setup_tag_screen.dart';
+import '../utils/tag_navigation.dart';
+import '../widgets/nova_sheet.dart';
 
 class NetworksScreen extends StatefulWidget {
-  const NetworksScreen({super.key});
+  const NetworksScreen({super.key, required this.onScanFirstTag});
 
-  static Future<void> openTag(BuildContext context, String networkId) async {
-    final network = StorageService.getById(networkId);
-    if (network == null) return;
-
-    if (network.needsSetup) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => SetupTagScreen(network: network),
-        ),
-      );
-    } else {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => NetworkDetailScreen(network: network),
-        ),
-      );
-    }
-  }
+  final VoidCallback onScanFirstTag;
 
   @override
   State<NetworksScreen> createState() => _NetworksScreenState();
@@ -46,63 +30,81 @@ class _NetworksScreenState extends State<NetworksScreen>
 
     return SafeArea(
       bottom: false,
-      child: ValueListenableBuilder<int>(
-        valueListenable: StorageService.networksRevision,
-        builder: (context, _, __) {
-          final networks = StorageService.getAll();
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          NovaScreenHeader(title: l10n.networksTab),
+          Expanded(
+            child: ValueListenableBuilder<int>(
+              valueListenable: StorageService.networksRevision,
+              builder: (context, _, __) {
+                final networks = StorageService.getAll();
 
-          if (networks.isEmpty) {
-            return _EmptyState(l10n: l10n);
-          }
+                if (networks.isEmpty) {
+                  return _EmptyState(
+                    l10n: l10n,
+                    onScanFirstTag: widget.onScanFirstTag,
+                  );
+                }
 
-          return ListView.builder(
-          padding: AppSpacing.screenPadding.copyWith(
-            top: AppSpacing.md,
-            bottom: AppSpacing.xl * 2,
+                return ListView.builder(
+                  padding: AppSpacing.screenPadding.copyWith(
+                    top: AppSpacing.md,
+                    bottom: AppSpacing.xl * 2,
+                  ),
+                  itemCount: networks.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == networks.length) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.swipe_left_outlined,
+                              size: 13,
+                              color:
+                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.swipeToDeleteHint,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _NetworkCard(network: networks[index]),
+                    );
+                  },
+                );
+              },
+            ),
           ),
-          itemCount: networks.length + 1,
-          itemBuilder: (context, index) {
-            if (index == networks.length) {
-              return Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.swipe_left_outlined,
-                      size: 13,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Swipe left to delete',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _NetworkCard(network: networks[index]),
-            );
-          },
-          );
-        },
+        ],
       ),
     );
   }
 }
 
-// ──────────────────────── Empty state ──────────────────────────────────────
-
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.l10n});
+  const _EmptyState({
+    required this.l10n,
+    required this.onScanFirstTag,
+  });
+
   final AppLocalizations l10n;
+  final VoidCallback onScanFirstTag;
 
   @override
   Widget build(BuildContext context) {
@@ -131,18 +133,24 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'No tags yet',
+              l10n.noTagsYetTitle,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Write your first WiFi tag from the Home tab.\nThen it will appear here.',
+              l10n.noTagsYetDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            NovaPrimaryButton(
+              label: l10n.scanFirstTagCta,
+              icon: Icons.nfc_rounded,
+              onPressed: onScanFirstTag,
             ),
           ],
         ),
@@ -150,8 +158,6 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-// ──────────────────────── Network card ─────────────────────────────────────
 
 class _NetworkCard extends StatelessWidget {
   const _NetworkCard({required this.network});
@@ -165,11 +171,22 @@ class _NetworkCard extends StatelessWidget {
     return Dismissible(
       key: ValueKey(network.id),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        if (!network.writtenToTag && !network.tagLocked) return true;
+        final confirm = await NovaConfirmSheet.show(
+          context,
+          title: l10n.deleteSyncedTagTitle,
+          message: l10n.deleteSyncedTagMessage,
+          confirmLabel: l10n.delete,
+          isDestructive: true,
+        );
+        return confirm == true;
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: AppSpacing.md),
         decoration: BoxDecoration(
-          color: const Color(0xFFEF4444),
+          color: theme.colorScheme.error,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -178,7 +195,7 @@ class _NetworkCard extends StatelessWidget {
             const Icon(Icons.delete_outline, color: Colors.white, size: 22),
             const SizedBox(height: 4),
             Text(
-              'Delete',
+              l10n.delete,
               style: theme.textTheme.labelSmall
                   ?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
             ),
@@ -215,15 +232,15 @@ class _CardBody extends StatelessWidget {
     final (statusColor, statusBg, statusIcon, statusLabel) = _status(l10n);
 
     return Material(
-      color: Colors.white,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () => NetworksScreen.openTag(context, network.id),
+        onTap: () => TagNavigation.openTag(context, network.id),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            border: Border.all(color: AppTheme.brandOutline),
+            border: Border.all(color: theme.colorScheme.outline),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -231,7 +248,6 @@ class _CardBody extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  // WiFi icon bubble
                   Container(
                     width: 44,
                     height: 44,
@@ -241,9 +257,10 @@ class _CardBody extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.wifi, size: 22, color: Colors.white),
+                    child:
+                        const Icon(Icons.wifi, size: 22, color: Colors.white),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -279,15 +296,15 @@ class _CardBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
                     size: 20,
-                    color: AppTheme.brandPurple,
+                    color: theme.colorScheme.primary,
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Divider(height: 1),
+              Divider(height: 1, color: theme.colorScheme.outline),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
@@ -303,7 +320,7 @@ class _CardBody extends StatelessWidget {
                       color: const Color(0xFF6D28D9),
                       bg: const Color(0xFFEDE9FE),
                       icon: Icons.lock_outline,
-                      label: 'Locked',
+                      label: l10n.locked,
                     ),
                   ],
                   const Spacer(),
@@ -325,23 +342,23 @@ class _CardBody extends StatelessWidget {
   (Color, Color, IconData, String) _status(AppLocalizations l10n) {
     if (network.needsSetup) {
       return (
-        AppTheme.brandAmber,
-        const Color(0xFFFEF3C7),
+        AppTheme.brandAmberDark,
+        AppTheme.brandAmberSurface,
         Icons.hourglass_top_outlined,
         l10n.awaitingSetup,
       );
     }
     if (network.writtenToTag) {
       return (
-        AppTheme.brandGreen,
-        const Color(0xFFD1FAE5),
+        AppTheme.brandGreenDark,
+        AppTheme.brandGreenSurface,
         Icons.check_circle_outline,
         l10n.syncedToTag,
       );
     }
     return (
-      const Color(0xFFF59E0B),
-      const Color(0xFFFEF3C7),
+      AppTheme.brandPurple,
+      AppTheme.brandPurpleLight,
       Icons.pending_outlined,
       l10n.notYetWritten,
     );
@@ -355,6 +372,7 @@ class _Chip extends StatelessWidget {
     required this.icon,
     required this.label,
   });
+
   final Color color;
   final Color bg;
   final IconData icon;

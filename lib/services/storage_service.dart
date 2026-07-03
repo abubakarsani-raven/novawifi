@@ -13,6 +13,8 @@ class StorageService {
   static const _boxName = 'wifi_networks';
   static const _encryptionKeyName = 'hive_encryption_key';
   static const _localeKey = 'app_locale';
+  static const _onboardingKey = 'onboarding_completed';
+  static const _themeModeKey = 'theme_mode';
 
   static final FlutterSecureStorage _secureStorage =
       const FlutterSecureStorage();
@@ -51,6 +53,52 @@ class StorageService {
 
   static void _notify() {
     networksRevision.value++;
+  }
+
+  /// Inserts sample networks (only when the box is empty) for demos and App
+  /// Store screenshots. Gated behind --dart-define=SEED_DEMO=true in main().
+  static Future<void> seedDemoNetworks() async {
+    if (box.isNotEmpty) return;
+    final now = DateTime.now();
+    final demo = [
+      WifiNetwork(
+        id: '11111111-1111-4111-8111-111111111111',
+        ssid: 'Nova Lobby',
+        password: 'welcome2024',
+        label: 'Lobby Guest',
+        securityType: 'WPA2',
+        isConfigured: true,
+        tagProvisioned: true,
+        writtenToTag: true,
+        updatedAt: now,
+      ),
+      WifiNetwork(
+        id: '22222222-2222-4222-8222-222222222222',
+        ssid: 'BrewHouse',
+        password: 'espresso123',
+        label: 'Café Wi‑Fi',
+        securityType: 'WPA2',
+        isConfigured: true,
+        tagProvisioned: true,
+        writtenToTag: true,
+        updatedAt: now,
+      ),
+      WifiNetwork(
+        id: '33333333-3333-4333-8333-333333333333',
+        ssid: '',
+        password: '',
+        label: 'Suite 204',
+        securityType: 'WPA2',
+        isConfigured: false,
+        tagProvisioned: true,
+        writtenToTag: true,
+        updatedAt: now,
+      ),
+    ];
+    for (final n in demo) {
+      await box.put(n.id, n);
+    }
+    _notify();
   }
 
   static List<WifiNetwork> getAll() {
@@ -95,4 +143,30 @@ class StorageService {
   static Future<String?> loadLocale() async {
     return _secureStorage.read(key: _localeKey);
   }
+
+  static Future<bool> hasCompletedOnboarding() async {
+    final value = await _secureStorage.read(key: _onboardingKey);
+    return value == 'true';
+  }
+
+  static Future<void> setOnboardingCompleted() async {
+    await _secureStorage.write(key: _onboardingKey, value: 'true');
+  }
+
+  static Future<void> saveThemeMode(String mode) async {
+    await _secureStorage.write(key: _themeModeKey, value: mode);
+  }
+
+  static Future<String?> loadThemeMode() async {
+    return _secureStorage.read(key: _themeModeKey);
+  }
+
+  /// Count of tags awaiting WiFi setup.
+  static int countNeedsSetup() =>
+      box.values.where((n) => n.needsSetup).length;
+
+  /// Configured tags not yet written to NFC.
+  static int countNotWritten() => box.values
+      .where((n) => !n.needsSetup && !n.writtenToTag)
+      .length;
 }

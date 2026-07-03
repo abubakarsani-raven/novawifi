@@ -4,9 +4,17 @@ import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
 
 class NfcPromptWidget extends StatefulWidget {
-  const NfcPromptWidget({super.key, required this.prompt});
+  const NfcPromptWidget({
+    super.key,
+    required this.prompt,
+    this.diameter = 210,
+  });
 
   final String prompt;
+
+  /// Overall diameter of the pulsing-ring area. Use a smaller value when the
+  /// prompt is shown inline (e.g. the Home scan state) vs full-screen flows.
+  final double diameter;
 
   @override
   State<NfcPromptWidget> createState() => _NfcPromptWidgetState();
@@ -32,8 +40,9 @@ class _NfcPromptWidgetState extends State<NfcPromptWidget>
   }
 
   Widget _ring(double delay) {
+    final core = widget.diameter * 0.42;
     final t = (_controller.value - delay + 1.0) % 1.0;
-    final size = 88.0 + (120.0 * t);
+    final size = core + ((widget.diameter - core) * t);
     final opacity = (1.0 - t) * 0.45;
     return Opacity(
       opacity: opacity,
@@ -56,12 +65,14 @@ class _NfcPromptWidgetState extends State<NfcPromptWidget>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final core = widget.diameter * 0.42;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 210,
-          height: 210,
+          width: widget.diameter,
+          height: widget.diameter,
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -76,15 +87,15 @@ class _NfcPromptWidgetState extends State<NfcPromptWidget>
               );
             },
             child: Container(
-              width: 88,
-              height: 88,
+              width: core,
+              height: core,
               decoration: BoxDecoration(
                 color: AppTheme.brandPurple.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.nfc,
-                size: 48,
+                size: core * 0.55,
                 color: AppTheme.brandPurple,
               ),
             ),

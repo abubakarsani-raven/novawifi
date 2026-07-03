@@ -18,6 +18,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scanQrCode => 'Escanear código QR';
 
   @override
+  String get useCurrentWifi => 'Usar la Wi‑Fi actual';
+
+  @override
+  String get couldNotReadCurrentWifi => 'No se pudo leer la red Wi‑Fi actual';
+
+  @override
   String get networkName => 'Nombre de red (SSID)';
 
   @override
@@ -87,15 +93,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorPasswordTooShort =>
       'La contraseña debe tener al menos 8 caracteres';
-
-  @override
-  String get adminPin => 'PIN de administrador';
-
-  @override
-  String get enterPin => 'Introduce tu PIN de 6 dígitos';
-
-  @override
-  String get wrongPin => 'PIN incorrecto';
 
   @override
   String get settings => 'Ajustes';
@@ -194,6 +191,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutFooter => 'Nova Heronix — gestión WiFi interna';
 
   @override
+  String get aboutHeader => 'Acerca de';
+
+  @override
   String get syncedToTag => 'Sincronizado con etiqueta';
 
   @override
@@ -207,10 +207,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get passwordStrengthStrong => 'Fuerte';
-
-  @override
-  String get firstLaunchSetPin =>
-      'Establece un PIN de administrador de 6 dígitos para proteger acciones sensibles';
 
   @override
   String get holdPhoneToTag => 'Mantén el teléfono contra la etiqueta';
@@ -273,12 +269,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get save => 'Guardar';
 
   @override
-  String get changeAdminPin => 'Cambiar PIN de administrador';
-
-  @override
-  String get newPin => 'Nuevo PIN';
-
-  @override
   String get copiedToClipboard => 'Copiado al portapapeles';
 
   @override
@@ -308,9 +298,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get enterCurrentPinToReset =>
       'Introduce tu PIN actual para restablecer';
-
-  @override
-  String get settingsLocked => 'Introduce el PIN para abrir ajustes';
 
   @override
   String get exportQrTitle => 'Exportar código QR';
@@ -387,9 +374,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editCredentials => 'Editar SSID y contraseña';
-
-  @override
-  String get viewCredentialsPin => 'Introduce el PIN para ver credenciales';
 
   @override
   String get factoryAdminPin => 'Código de servicio';
@@ -520,4 +504,188 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get preShipStep5 => 'Opcional: bloquear etiqueta antes del envío';
+
+  @override
+  String get homeTab => 'Inicio';
+
+  @override
+  String get scanReadyBadge => 'Listo para escanear';
+
+  @override
+  String get scanningForTags => 'Buscando etiquetas…';
+
+  @override
+  String get wifiTagManagerTitle => 'Gestor de etiquetas WiFi';
+
+  @override
+  String get wifiTagManagerSubtitle =>
+      'Administra tus redes WiFi guardadas y exporta códigos QR.';
+
+  @override
+  String get swipeToDeleteHint => 'Desliza a la izquierda para eliminar';
+
+  @override
+  String get noTagsYetTitle => 'Sin etiquetas';
+
+  @override
+  String get noTagsYetDescription =>
+      'Escanea tu primera etiqueta Nova Heronix desde Inicio.';
+
+  @override
+  String get scanFirstTagCta => 'Escanear tu primera etiqueta';
+
+  @override
+  String get locked => 'Bloqueada';
+
+  @override
+  String get exportQrSection => 'Exportar QR';
+
+  @override
+  String get tagActionsSection => 'Acciones de etiqueta';
+
+  @override
+  String get wifiCredentialsSection => 'Credenciales WiFi';
+
+  @override
+  String get securityLabel => 'Seguridad';
+
+  @override
+  String get advancedSection => 'Avanzado';
+
+  @override
+  String get securityTypeLabel => 'Tipo de seguridad';
+
+  @override
+  String get hiddenNetworkLabel => 'Red oculta';
+
+  @override
+  String get nearbyNetworks => 'Redes cercanas';
+
+  @override
+  String get wifiScanAndroidOnly =>
+      'El escaneo WiFi solo está disponible en Android.\nIntroduce el nombre de la red manualmente.';
+
+  @override
+  String get wifiScanPermissionRequired =>
+      'Se requiere permiso de ubicación para escanear redes WiFi.\nConcédelo en Ajustes.';
+
+  @override
+  String get wifiScanNoNetworks => 'No se encontraron redes';
+
+  @override
+  String get scanningForNetworks => 'Buscando redes…';
+
+  @override
+  String get rescan => 'Volver a escanear';
+
+  @override
+  String get serviceTools => 'Herramientas de servicio';
+
+  @override
+  String get wipeStartButton => 'Empezar a borrar';
+
+  @override
+  String get wipeBatchHint =>
+      'Mantén cada etiqueta para borrarla. La siguiente queda lista automáticamente tras el éxito.';
+
+  @override
+  String get onboardingSkip => 'Omitir';
+
+  @override
+  String get onboardingNext => 'Siguiente';
+
+  @override
+  String get onboardingGetStarted => 'Empezar';
+
+  @override
+  String get onboardingPage1Title => 'Escanea tu etiqueta Nova';
+
+  @override
+  String get onboardingPage1Body =>
+      'Acerca el teléfono a una etiqueta NFC Nova Heronix para configurar el WiFi de invitados.';
+
+  @override
+  String get onboardingPage2Title => 'Añade WiFi y escribe en la etiqueta';
+
+  @override
+  String get onboardingPage2Body =>
+      'Introduce los datos una vez. Nova los escribe en la etiqueta para acceso de invitados con un toque.';
+
+  @override
+  String get onboardingPage3Title => 'Comparte con invitados';
+
+  @override
+  String get onboardingPage3Body =>
+      'Android: tocar para unirse. iPhone: escanear el QR o usar el App Clip.';
+
+  @override
+  String get forGuestsSection => 'Para invitados';
+
+  @override
+  String get forGuestsSubtitle => 'Código QR que los invitados pueden escanear';
+
+  @override
+  String get forYouSection => 'Para ti';
+
+  @override
+  String get forYouSubtitle => 'Credenciales y gestión de la etiqueta';
+
+  @override
+  String get advancedSectionSubtitle => 'Acciones irreversibles';
+
+  @override
+  String get deleteSyncedTagTitle => '¿Eliminar etiqueta sincronizada?';
+
+  @override
+  String get deleteSyncedTagMessage =>
+      'Esta etiqueta se escribió en NFC. Eliminar solo la quita de la app — la etiqueta física no cambia.';
+
+  @override
+  String tagsNeedSetupBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count etiquetas necesitan configuración',
+      one: '1 etiqueta necesita configuración',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tagsNotWrittenBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count etiquetas aún no escritas en NFC',
+      one: '1 etiqueta aún no escrita en NFC',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get viewNetworks => 'Ver redes';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
+  String get nfcPhaseScanning => 'Esperando etiqueta NFC';
+
+  @override
+  String get nfcPhaseSuccess => 'Éxito';
+
+  @override
+  String get nfcPhaseFailure => 'Error';
+
+  @override
+  String get hiddenNetworkSubtitle => 'La red no emite su nombre';
 }

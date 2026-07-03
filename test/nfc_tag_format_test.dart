@@ -64,7 +64,7 @@ void main() {
     );
   });
 
-  test('configured Android message is WSC + Nova, no AAR (no app push)', () {
+  test('configured tag is universal URL + WSC + Nova, no AAR (no app push)', () {
     final network = WifiNetwork(
       id: '550e8400-e29b-41d4-a716-446655440000',
       ssid: 'Guest',
@@ -74,26 +74,23 @@ void main() {
     );
 
     final message = NfcService.buildMessageForNetwork(network);
-    if (!Platform.isAndroid) return;
 
-    // Guest WiFi tags: WSC join record + Nova metadata only. No AAR launcher
-    // so tapping never pushes a guest to install the app; app-less guests use
-    // the QR code instead.
-    expect(message.records.length, 2);
+    // Universal guest tag (same layout on every platform):
+    //  1) guest URL  → iPhone tap opens the App Clip / web landing page
+    //  2) WSC        → modern Android auto-joins
+    //  3) Nova       → operator app reads it back
+    // No AAR launcher, so a guest tap never pushes the app store.
+    expect(message.records.length, 3);
+    expect(message.records[0].typeNameFormat, TypeNameFormat.wellKnown);
+    expect(String.fromCharCodes(message.records[0].type), 'U');
     expect(
-      String.fromCharCodes(message.records[0].type),
+      String.fromCharCodes(message.records[1].type),
       WifiWscEncoder.mimeType,
     );
     expect(
-      String.fromCharCodes(message.records[1].type),
+      String.fromCharCodes(message.records[2].type),
       NfcConstants.novaDataMimeType,
     );
-    final hasUri = message.records.any(
-      (r) =>
-          r.typeNameFormat == TypeNameFormat.wellKnown &&
-          String.fromCharCodes(r.type) == 'U',
-    );
-    expect(hasUri, isFalse);
     final hasAar = message.records.any(
       (r) =>
           r.typeNameFormat == TypeNameFormat.external &&
@@ -104,12 +101,37 @@ void main() {
       NfcService.validateOutgoingMessage(message, network),
       isNull,
     );
+  });
 
-    final novaJson = jsonDecode(
-      utf8.decode(message.records[1].payload),
-    ) as Map<String, dynamic>;
-    expect(novaJson['v'], NfcConstants.tagFormatVersion);
-    expect(novaJson.containsKey('password'), isFalse);
+  test('configured tag URL carries credentials for App Clip / landing page', () {
+    final network = WifiNetwork(
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      ssid: 'Guest',
+      password: 'password12',
+      label: 'Lobby',
+      isConfigured: true,
+    );
+
+    final message = NfcService.buildMessageForNetwork(network);
+    final uri = message.records.firstWhere(
+      (r) =>
+          r.typeNameFormat == TypeNameFormat.wellKnown &&
+          String.fromCharCodes(r.type) == 'U',
+    );
+
+    // Well-known URI payload: [0x04 = "https://"] + the rest of the URL.
+    expect(uri.payload.first, 0x04);
+    final url = 'https://${utf8.decode(uri.payload.sublist(1))}';
+    expect(url, startsWith('${NfcConstants.appClipBaseUrl}#d='));
+
+    // Mirror ios/NovaClip/WifiConnectView.swift: fragment "d=" → base64 → JSON.
+    final b64 = url.substring(url.indexOf('#d=') + 3);
+    final json =
+        jsonDecode(utf8.decode(base64.decode(b64))) as Map<String, dynamic>;
+    expect(json['s'], 'Guest');
+    expect(json['p'], 'password12');
+    expect(json['l'], 'Lobby');
+    expect(json['t'], 'WPA2');
   });
 
   test('parseNovaJson accepts compact i key', () {

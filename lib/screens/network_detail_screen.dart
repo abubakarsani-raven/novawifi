@@ -33,9 +33,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   bool _obscured = true;
   NfcWritePhase? _writePhase;
   String _writeFailureMessage = '';
-  // Credentials are always visible now that the PIN gate is removed.
-  final bool _credentialsUnlocked = true;
-  bool _checkingAccess = true;
   QrStyleOptions _qrStyle = const QrStyleOptions();
 
   @override
@@ -51,8 +48,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
           ),
         );
       });
-    } else {
-      _checkingAccess = false;
     }
   }
 
@@ -143,7 +138,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   }
 
   Future<void> _shareQr() async {
-    if (!_credentialsUnlocked) return;
     final l10n = AppLocalizations.of(context)!;
     await QrService.shareQr(_qrKey, 'nova_${_network.ssid}');
     if (mounted) {
@@ -153,7 +147,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   }
 
   Future<void> _downloadQr() async {
-    if (!_credentialsUnlocked) return;
     final l10n = AppLocalizations.of(context)!;
     final ok = await QrService.saveQrToGallery(_qrKey);
     if (!mounted) return;
@@ -165,7 +158,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   }
 
   Future<void> _downloadQrPdf() async {
-    if (!_credentialsUnlocked) return;
     final l10n = AppLocalizations.of(context)!;
     await QrExportService.downloadPdf(
       _network,
@@ -179,7 +171,6 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   }
 
   Future<void> _printQr() async {
-    if (!_credentialsUnlocked) return;
     final l10n = AppLocalizations.of(context)!;
     final ok = await QrExportService.printQr(
       _network,
@@ -200,7 +191,7 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (_checkingAccess) {
+    if (_network.needsSetup) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -230,94 +221,146 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
                       delegate: SliverChildListDelegate([
                         if (_network.tagLocked)
                           _LockedBanner(l10n: l10n),
-                        _CredentialsCard(
-                          network: _network,
-                          obscured: _obscured,
-                          onToggleObscure: () =>
-                              setState(() => _obscured = !_obscured),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
 
-                        // QR Code section
-                        _SectionLabel(label: l10n.qrCode),
-                        const SizedBox(height: AppSpacing.sm),
-                        QrCodeWidget(
-                          ssid: _network.ssid,
-                          password: _network.password,
-                          boundaryKey: _qrKey,
-                          securityType: _network.securityType,
-                          isHidden: _network.isHidden,
-                          label: _network.label.isNotEmpty
-                              ? _network.label
-                              : null,
-                          style: _qrStyle,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        QrStylePicker(
-                          style: _qrStyle,
-                          onChanged: (s) => setState(() => _qrStyle = s),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
+                        // For guests
+                        NovaSectionLabel(label: l10n.forGuestsSection),
+                        const SizedBox(height: 4),
                         Text(
-                          l10n.printQrReminder,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(fontStyle: FontStyle.italic),
+                          l10n.forGuestsSubtitle,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        NovaCard(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              QrCodeWidget(
+                                ssid: _network.ssid,
+                                password: _network.password,
+                                boundaryKey: _qrKey,
+                                securityType: _network.securityType,
+                                isHidden: _network.isHidden,
+                                label: _network.label.isNotEmpty
+                                    ? _network.label
+                                    : null,
+                                style: _qrStyle,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              QrStylePicker(
+                                style: _qrStyle,
+                                onChanged: (s) => setState(() => _qrStyle = s),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                l10n.printQrReminder,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(fontStyle: FontStyle.italic),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              NovaSectionLabel(label: l10n.exportQrSection),
+                              const SizedBox(height: AppSpacing.sm),
+                              NovaExportGrid(
+                                tiles: [
+                                  NovaExportTile(
+                                    label: l10n.shareQr,
+                                    icon: Icons.share_outlined,
+                                    onTap: _shareQr,
+                                  ),
+                                  NovaExportTile(
+                                    label: l10n.downloadQr,
+                                    icon: Icons.download_outlined,
+                                    onTap: _downloadQr,
+                                  ),
+                                  NovaExportTile(
+                                    label: l10n.downloadQrPdf,
+                                    icon: Icons.picture_as_pdf_outlined,
+                                    onTap: _downloadQrPdf,
+                                  ),
+                                  NovaExportTile(
+                                    label: l10n.printQr,
+                                    icon: Icons.print_outlined,
+                                    onTap: _printQr,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
-                        // Export
-                        _SectionLabel(label: 'Export QR'),
+                        // For you
+                        NovaSectionLabel(label: l10n.forYouSection),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.forYouSubtitle,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
                         const SizedBox(height: AppSpacing.sm),
-                        NovaExportGrid(
-                          tiles: [
-                            NovaExportTile(
-                              label: l10n.shareQr,
-                              icon: Icons.share_outlined,
-                              onTap: _shareQr,
-                              enabled: _credentialsUnlocked,
-                            ),
-                            NovaExportTile(
-                              label: l10n.downloadQr,
-                              icon: Icons.download_outlined,
-                              onTap: _downloadQr,
-                              enabled: _credentialsUnlocked,
-                            ),
-                            NovaExportTile(
-                              label: l10n.downloadQrPdf,
-                              icon: Icons.picture_as_pdf_outlined,
-                              onTap: _downloadQrPdf,
-                              enabled: _credentialsUnlocked,
-                            ),
-                            NovaExportTile(
-                              label: l10n.printQr,
-                              icon: Icons.print_outlined,
-                              onTap: _printQr,
-                              enabled: _credentialsUnlocked,
-                            ),
-                          ],
+                        NovaCard(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _CredentialsBody(
+                                network: _network,
+                                obscured: _obscured,
+                                onToggleObscure: () =>
+                                    setState(() => _obscured = !_obscured),
+                                l10n: l10n,
+                              ),
+                              if (!_network.tagLocked) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                NovaPrimaryButton(
+                                  label: l10n.writeToNfc,
+                                  icon: Icons.nfc,
+                                  onPressed: _writeToTag,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                OutlinedButton.icon(
+                                  onPressed: _changePassword,
+                                  icon: const Icon(Icons.edit_outlined,
+                                      size: 18),
+                                  label: Text(l10n.editCredentials),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
 
-                        // Tag actions
-                        if (!_network.tagLocked) ...[
+                        if (!_network.tagLocked && _network.writtenToTag) ...[
                           const SizedBox(height: AppSpacing.lg),
-                          _SectionLabel(label: 'Tag actions'),
-                          const SizedBox(height: AppSpacing.sm),
-                          NovaPrimaryButton(
-                            label: l10n.writeToNfc,
-                            icon: Icons.nfc,
-                            onPressed: _writeToTag,
+                          NovaSectionLabel(label: l10n.advancedSection),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.advancedSectionSubtitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
-                          NovaPrimaryButton(
-                            label: l10n.editCredentials,
-                            icon: Icons.edit_outlined,
-                            onPressed: _changePassword,
+                          NovaCard(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: _LockTagButton(
+                              onPressed: _lockTag,
+                              l10n: l10n,
+                            ),
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          if (_network.writtenToTag)
-                            _LockTagButton(onPressed: _lockTag, l10n: l10n),
                         ],
                       ]),
                     ),
@@ -414,99 +457,90 @@ class _LockedBanner extends StatelessWidget {
   }
 }
 
-class _CredentialsCard extends StatelessWidget {
-  const _CredentialsCard({
+class _CredentialsBody extends StatelessWidget {
+  const _CredentialsBody({
     required this.network,
     required this.obscured,
     required this.onToggleObscure,
+    required this.l10n,
   });
+
   final WifiNetwork network;
   final bool obscured;
   final VoidCallback onToggleObscure;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.brandOutline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
                 ),
-                child: const Icon(Icons.wifi, size: 20, color: Colors.white),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  'WiFi Credentials',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
+              child: const Icon(Icons.wifi, size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                l10n.wifiCredentialsSection,
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
-              if (network.tagLocked)
-                const Icon(Icons.lock_outline,
-                    size: 16, color: AppTheme.brandAmber),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.sm),
-          _CredRow(
-            label: 'Network',
-            value: network.ssid,
-            icon: Icons.wifi_outlined,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _CredRow(
-            label: 'Password',
-            value: obscured ? '••••••••••••' : network.password,
-            icon: obscured
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            onIconTap: onToggleObscure,
-            trailing: IconButton(
-              icon: const Icon(Icons.copy_outlined, size: 18),
-              color: AppTheme.brandPurple,
-              tooltip: 'Copy password',
-              onPressed: () async {
-                await Clipboard.setData(
-                    ClipboardData(text: network.password));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          AppLocalizations.of(context)!.passwordCopied),
-                    ),
-                  );
-                }
-              },
             ),
-          ),
-          if (network.securityType.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            _CredRow(
-              label: 'Security',
-              value: network.securityType,
-              icon: Icons.security_outlined,
-            ),
+            if (network.tagLocked)
+              const Icon(Icons.lock_outline,
+                  size: 16, color: AppTheme.brandAmber),
           ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Divider(height: 1, color: theme.colorScheme.outline),
+        const SizedBox(height: AppSpacing.sm),
+        _CredRow(
+          label: l10n.networkName,
+          value: network.ssid,
+          icon: Icons.wifi_outlined,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _CredRow(
+          label: l10n.password,
+          value: obscured ? '••••••••••••' : network.password,
+          icon: obscured
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
+          onIconTap: onToggleObscure,
+          trailing: IconButton(
+            icon: const Icon(Icons.copy_outlined, size: 18),
+            color: AppTheme.brandPurple,
+            tooltip: l10n.copyPassword,
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: network.password));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.passwordCopied)),
+                );
+              }
+            },
+          ),
+        ),
+        if (network.securityType.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _CredRow(
+            label: l10n.securityLabel,
+            value: network.securityType,
+            icon: Icons.security_outlined,
+          ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -556,23 +590,6 @@ class _CredRow extends StatelessWidget {
         ),
         if (trailing != null) trailing!,
       ],
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-          ),
     );
   }
 }

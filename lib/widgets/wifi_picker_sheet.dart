@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/wifi_scan_service.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
@@ -19,7 +20,6 @@ class WifiPickerResult {
 class WifiPickerSheet extends StatefulWidget {
   const WifiPickerSheet({super.key});
 
-  /// Shows the sheet and returns a [WifiPickerResult] or null if dismissed.
   static Future<WifiPickerResult?> show(BuildContext context) {
     return showModalBottomSheet<WifiPickerResult>(
       context: context,
@@ -53,10 +53,12 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
       _error = null;
     });
 
+    final l10n = AppLocalizations.of(context)!;
+
     if (!Platform.isAndroid) {
       setState(() {
         _scanning = false;
-        _error = 'WiFi scanning is only available on Android.\nPlease enter the network name manually.';
+        _error = l10n.wifiScanAndroidOnly;
       });
       return;
     }
@@ -67,7 +69,7 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
     if (results == null) {
       setState(() {
         _scanning = false;
-        _error = 'Location permission is required to scan for WiFi networks.\nPlease grant it in Settings.';
+        _error = l10n.wifiScanPermissionRequired;
       });
     } else {
       setState(() {
@@ -79,6 +81,7 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
@@ -88,7 +91,6 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
       expand: false,
       builder: (_, controller) => Column(
         children: [
-          // Handle
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
             child: Container(
@@ -101,36 +103,50 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.sm, 0),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+              0,
+            ),
             child: Row(
               children: [
-                Text('Nearby Networks', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  l10n.nearbyNetworks,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const Spacer(),
                 if (!_scanning)
                   IconButton(
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Rescan',
+                    tooltip: l10n.rescan,
                     onPressed: _scan,
                   ),
               ],
             ),
           ),
           const Divider(height: 1),
-          Expanded(child: _buildBody(theme, controller)),
+          Expanded(child: _buildBody(theme, controller, l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildBody(ThemeData theme, ScrollController controller) {
+  Widget _buildBody(
+    ThemeData theme,
+    ScrollController controller,
+    AppLocalizations l10n,
+  ) {
     if (_scanning) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: AppSpacing.md),
-            Text('Scanning for networks…'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
+            Text(l10n.scanningForNetworks),
           ],
         ),
       );
@@ -143,12 +159,18 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.wifi_off_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.wifi_off_outlined,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -162,14 +184,18 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_find_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.wifi_find_outlined,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: AppSpacing.md),
-            Text('No networks found', style: theme.textTheme.bodyMedium),
+            Text(l10n.wifiScanNoNetworks, style: theme.textTheme.bodyMedium),
             const SizedBox(height: AppSpacing.sm),
             TextButton.icon(
               onPressed: _scan,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.retry),
             ),
           ],
         ),
@@ -183,7 +209,12 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
         final n = networks[i];
         return ListTile(
           leading: _SignalIcon(bars: n.signalBars),
-          title: Text(n.ssid, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+          title: Text(
+            n.ssid,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           trailing: _SecurityBadge(type: n.securityType),
           onTap: () => Navigator.pop(
             context,
@@ -197,11 +228,13 @@ class _WifiPickerSheetState extends State<WifiPickerSheet> {
 
 class _SignalIcon extends StatelessWidget {
   const _SignalIcon({required this.bars});
-  final int bars; // 1–4
+  final int bars;
 
   @override
   Widget build(BuildContext context) {
-    final color = bars >= 3 ? AppTheme.brandPurple : Theme.of(context).colorScheme.onSurfaceVariant;
+    final color = bars >= 3
+        ? AppTheme.brandPurple
+        : Theme.of(context).colorScheme.onSurfaceVariant;
     final icon = switch (bars) {
       4 => Icons.signal_wifi_4_bar,
       3 => Icons.network_wifi_3_bar,
@@ -222,9 +255,9 @@ class _SecurityBadge extends StatelessWidget {
     final (label, color) = switch (type) {
       'WPA3' => ('WPA3', const Color(0xFF16A34A)),
       'WPA2' => ('WPA2', AppTheme.brandPurple),
-      'WPA'  => ('WPA',  const Color(0xFFF59E0B)),
-      'WEP'  => ('WEP',  theme.colorScheme.error),
-      _      => ('Open', theme.colorScheme.onSurfaceVariant),
+      'WPA' => ('WPA', const Color(0xFFF59E0B)),
+      'WEP' => ('WEP', theme.colorScheme.error),
+      _ => ('Open', theme.colorScheme.onSurfaceVariant),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -233,7 +266,13 @@ class _SecurityBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(label, style: theme.textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

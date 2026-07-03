@@ -18,6 +18,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanQrCode => 'Scanner le code QR';
 
   @override
+  String get useCurrentWifi => 'Utiliser le Wi‑Fi actuel';
+
+  @override
+  String get couldNotReadCurrentWifi =>
+      'Impossible de lire le réseau Wi‑Fi actuel';
+
+  @override
   String get networkName => 'Nom du réseau (SSID)';
 
   @override
@@ -87,15 +94,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPasswordTooShort =>
       'Le mot de passe doit contenir au moins 8 caractères';
-
-  @override
-  String get adminPin => 'PIN administrateur';
-
-  @override
-  String get enterPin => 'Entrez votre PIN à 6 chiffres';
-
-  @override
-  String get wrongPin => 'PIN incorrect';
 
   @override
   String get settings => 'Paramètres';
@@ -194,6 +192,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aboutFooter => 'Nova Heronix — gestion WiFi interne';
 
   @override
+  String get aboutHeader => 'À propos';
+
+  @override
   String get syncedToTag => 'Synchronisé avec la balise';
 
   @override
@@ -207,10 +208,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get passwordStrengthStrong => 'Fort';
-
-  @override
-  String get firstLaunchSetPin =>
-      'Définissez un PIN administrateur à 6 chiffres pour protéger les actions sensibles';
 
   @override
   String get holdPhoneToTag => 'Maintenez votre téléphone contre la balise';
@@ -273,12 +270,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get save => 'Enregistrer';
 
   @override
-  String get changeAdminPin => 'Changer le PIN administrateur';
-
-  @override
-  String get newPin => 'Nouveau PIN';
-
-  @override
   String get copiedToClipboard => 'Copié dans le presse-papiers';
 
   @override
@@ -308,9 +299,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get enterCurrentPinToReset =>
       'Entrez votre PIN actuel pour réinitialiser';
-
-  @override
-  String get settingsLocked => 'Entrez le PIN pour ouvrir les paramètres';
 
   @override
   String get exportQrTitle => 'Exporter le code QR';
@@ -385,9 +373,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get editCredentials => 'Modifier SSID et mot de passe';
-
-  @override
-  String get viewCredentialsPin => 'Entrez le PIN pour voir les identifiants';
 
   @override
   String get factoryAdminPin => 'Code service';
@@ -517,4 +502,188 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get preShipStep5 =>
       'Optionnel : verrouiller la balise avant expédition';
+
+  @override
+  String get homeTab => 'Accueil';
+
+  @override
+  String get scanReadyBadge => 'Prêt à scanner';
+
+  @override
+  String get scanningForTags => 'Recherche de balises…';
+
+  @override
+  String get wifiTagManagerTitle => 'Gestionnaire de balises WiFi';
+
+  @override
+  String get wifiTagManagerSubtitle =>
+      'Gérez vos réseaux WiFi enregistrés et exportez des codes QR.';
+
+  @override
+  String get swipeToDeleteHint => 'Glissez vers la gauche pour supprimer';
+
+  @override
+  String get noTagsYetTitle => 'Aucune balise';
+
+  @override
+  String get noTagsYetDescription =>
+      'Scannez votre première balise Nova Heronix depuis l\'accueil.';
+
+  @override
+  String get scanFirstTagCta => 'Scanner votre première balise';
+
+  @override
+  String get locked => 'Verrouillée';
+
+  @override
+  String get exportQrSection => 'Exporter le QR';
+
+  @override
+  String get tagActionsSection => 'Actions sur la balise';
+
+  @override
+  String get wifiCredentialsSection => 'Identifiants WiFi';
+
+  @override
+  String get securityLabel => 'Sécurité';
+
+  @override
+  String get advancedSection => 'Avancé';
+
+  @override
+  String get securityTypeLabel => 'Type de sécurité';
+
+  @override
+  String get hiddenNetworkLabel => 'Réseau masqué';
+
+  @override
+  String get nearbyNetworks => 'Réseaux à proximité';
+
+  @override
+  String get wifiScanAndroidOnly =>
+      'Le scan WiFi n\'est disponible que sur Android.\nSaisissez le nom du réseau manuellement.';
+
+  @override
+  String get wifiScanPermissionRequired =>
+      'L\'autorisation de localisation est requise pour scanner les réseaux WiFi.\nAccordez-la dans les paramètres.';
+
+  @override
+  String get wifiScanNoNetworks => 'Aucun réseau trouvé';
+
+  @override
+  String get scanningForNetworks => 'Recherche de réseaux…';
+
+  @override
+  String get rescan => 'Rescanner';
+
+  @override
+  String get serviceTools => 'Outils de service';
+
+  @override
+  String get wipeStartButton => 'Commencer l\'effacement';
+
+  @override
+  String get wipeBatchHint =>
+      'Maintenez chaque balise pour l\'effacer. La suivante est prête automatiquement après succès.';
+
+  @override
+  String get onboardingSkip => 'Passer';
+
+  @override
+  String get onboardingNext => 'Suivant';
+
+  @override
+  String get onboardingGetStarted => 'Commencer';
+
+  @override
+  String get onboardingPage1Title => 'Scannez votre balise Nova';
+
+  @override
+  String get onboardingPage1Body =>
+      'Approchez votre téléphone d\'une balise NFC Nova Heronix pour configurer le WiFi invité.';
+
+  @override
+  String get onboardingPage2Title => 'Ajoutez le WiFi et écrivez sur la balise';
+
+  @override
+  String get onboardingPage2Body =>
+      'Saisissez les détails une fois. Nova les écrit sur la balise pour un accès invité en un geste.';
+
+  @override
+  String get onboardingPage3Title => 'Partagez avec les invités';
+
+  @override
+  String get onboardingPage3Body =>
+      'Android : toucher pour rejoindre. iPhone : scanner le QR ou utiliser l\'App Clip.';
+
+  @override
+  String get forGuestsSection => 'Pour les invités';
+
+  @override
+  String get forGuestsSubtitle => 'Code QR que les invités peuvent scanner';
+
+  @override
+  String get forYouSection => 'Pour vous';
+
+  @override
+  String get forYouSubtitle => 'Identifiants et gestion de la balise';
+
+  @override
+  String get advancedSectionSubtitle => 'Actions irréversibles';
+
+  @override
+  String get deleteSyncedTagTitle => 'Supprimer la balise synchronisée ?';
+
+  @override
+  String get deleteSyncedTagMessage =>
+      'Cette balise a été écrite en NFC. La suppression ne retire que l\'entrée dans l\'app — la balise physique reste inchangée.';
+
+  @override
+  String tagsNeedSetupBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count balises à configurer',
+      one: '1 balise à configurer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tagsNotWrittenBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count balises pas encore écrites en NFC',
+      one: '1 balise pas encore écrite en NFC',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get viewNetworks => 'Voir les réseaux';
+
+  @override
+  String get appearance => 'Apparence';
+
+  @override
+  String get themeSystem => 'Système';
+
+  @override
+  String get themeLight => 'Clair';
+
+  @override
+  String get themeDark => 'Sombre';
+
+  @override
+  String get nfcPhaseScanning => 'En attente de la balise NFC';
+
+  @override
+  String get nfcPhaseSuccess => 'Succès';
+
+  @override
+  String get nfcPhaseFailure => 'Échec';
+
+  @override
+  String get hiddenNetworkSubtitle => 'Le réseau ne diffuse pas son nom';
 }

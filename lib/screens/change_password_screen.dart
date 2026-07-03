@@ -187,7 +187,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     DropdownButtonFormField<String>(
                       key: ValueKey(_securityType),
                       initialValue: _securityType,
-                      decoration: const InputDecoration(labelText: 'Security type'),
+                      decoration: InputDecoration(
+                        labelText: l10n.securityTypeLabel,
+                      ),
                       items: _securityTypes
                           .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                           .toList(),
@@ -224,8 +226,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     SwitchListTile(
                       value: _isHidden,
                       onChanged: (v) => setState(() => _isHidden = v),
-                      title: const Text('Hidden network'),
-                      subtitle: const Text('Network does not broadcast its name'),
+                      title: Text(l10n.hiddenNetworkLabel),
+                      subtitle: Text(l10n.hiddenNetworkSubtitle),
                       contentPadding: EdgeInsets.zero,
                     ),
 

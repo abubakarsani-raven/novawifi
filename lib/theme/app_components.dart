@@ -58,6 +58,70 @@ class NovaCard extends StatelessWidget {
   }
 }
 
+/// Consistent left-aligned screen title used by the tab screens (Networks,
+/// Settings) so every top-level destination has the same header rhythm.
+class NovaScreenHeader extends StatelessWidget {
+  const NovaScreenHeader({super.key, required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Uppercase section label with tracked letter-spacing (used to group content
+/// inside a screen). Mirrors the detail screen's section treatment.
+class NovaSectionLabel extends StatelessWidget {
+  const NovaSectionLabel({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      label.toUpperCase(),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+}
+
 /// Primary action button with a purple→violet gradient.
 class NovaPrimaryButton extends StatelessWidget {
   const NovaPrimaryButton({
@@ -79,55 +143,60 @@ class NovaPrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: disabled
-              ? null
-              : AppTheme.primaryGradient,
-          color: disabled ? AppTheme.brandPurple.withValues(alpha: 0.45) : null,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: disabled
-              ? null
-              : [
-                  BoxShadow(
-                    color: AppTheme.brandPurple.withValues(alpha: 0.30),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+      child: Semantics(
+        button: true,
+        label: label,
+        enabled: !disabled,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: disabled ? null : AppTheme.primaryGradient,
+            color: disabled
+                ? AppTheme.brandPurple.withValues(alpha: 0.45)
+                : null,
             borderRadius: BorderRadius.circular(16),
-            onTap: disabled ? null : onPressed,
-            child: Center(
-              child: isLoading
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (icon != null) ...[
-                          Icon(icon, size: 20, color: Colors.white),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(
-                          label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
+            boxShadow: disabled
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppTheme.brandPurple.withValues(alpha: 0.30),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
+                  ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: disabled ? null : onPressed,
+              child: Center(
+                child: isLoading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (icon != null) ...[
+                            Icon(icon, size: 20, color: Colors.white),
+                            const SizedBox(width: 8),
+                          ],
+                          Text(
+                            label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
         ),
@@ -185,40 +254,47 @@ class NovaExportTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Expanded(
-      child: Material(
-        color: AppTheme.brandSurfaceVariant,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
+      child: Semantics(
+        button: true,
+        label: label,
+        enabled: enabled,
+        child: Material(
+          color: AppTheme.brandSurfaceVariant,
           borderRadius: BorderRadius.circular(16),
-          onTap: enabled ? onTap : null,
-          child: Opacity(
-            opacity: enabled ? 1.0 : 0.4,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppTheme.brandPurpleLight,
-                      borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: enabled ? onTap : null,
+            child: Opacity(
+              opacity: enabled ? 1.0 : 0.4,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppTheme.brandPurpleLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child:
+                          Icon(icon, size: 20, color: AppTheme.brandPurple),
                     ),
-                    child: Icon(icon, size: 20, color: AppTheme.brandPurple),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -9,13 +9,12 @@ import '../services/factory_admin_session.dart';
 import '../services/nfc_launch_bridge.dart';
 import '../services/nfc_service.dart';
 import '../services/storage_service.dart';
-import '../theme/app_theme.dart';
 import '../utils/nfc_tag_router.dart';
-import 'network_detail_screen.dart';
+import '../utils/tag_navigation.dart';
 import 'networks_screen.dart';
+import 'onboarding_screen.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
-import 'setup_tag_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -39,6 +38,21 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (Platform.isIOS) {
       DeepLinkBridge.init(_handleDeepLink);
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowOnboarding();
+    });
+  }
+
+  Future<void> _maybeShowOnboarding() async {
+    if (!mounted) return;
+    if (await StorageService.hasCompletedOnboarding()) return;
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const OnboardingScreen(),
+      ),
+    );
   }
 
   @override
@@ -53,9 +67,6 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Handles a Universal Link from a tapped provisioned tag (iOS). The `t`
-  /// query carries the tag id; if it isn't stored yet we provision it locally
-  /// and open its setup form.
   Future<void> _handleDeepLink(Uri uri) async {
     if (!mounted) return;
     if (!uri.path.contains('wifi')) return;
@@ -68,14 +79,16 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
       await StorageService.upsert(network);
     }
     if (!mounted) return;
-    switchToTab(0);
-    _openTagById(network.id, forSetup: network.needsSetup);
+    await TagNavigation.openTagWithNetwork(
+      context,
+      network,
+      forSetup: network.needsSetup,
+    );
   }
 
   Future<void> _handleNfcLaunch(NfcReadResult result) async {
     if (!mounted) return;
     if (NfcService.sessionBusy) return;
-    switchToTab(0);
     final route = await NfcTagRouter.handleRead(context, result);
     if (route != null && mounted) {
       if (route.isLegacyFormat) {
@@ -86,7 +99,10 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
           ),
         );
       }
-      _openTagById(route.networkId, forSetup: route.forSetup);
+      await TagNavigation.openTag(
+        context,
+        route.networkId,
+      );
     }
   }
 
@@ -102,52 +118,51 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
     setState(() => _currentIndex = index);
   }
 
-  void _openTagById(String networkId, {required bool forSetup}) {
+  void startHomeScan() {
+    switchToTab(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScanScreen.scanKey.currentState?.startScan();
+    });
+  }
+
+  Future<void> _openTagById(String networkId, {required bool forSetup}) async {
     final network = StorageService.getById(networkId);
     if (network == null || !mounted) return;
-
-    switchToTab(1);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (forSetup || network.needsSetup) {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => SetupTagScreen(network: network),
-          ),
-        );
-      } else {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => NetworkDetailScreen(network: network),
-          ),
-        );
-      }
-    });
+    await TagNavigation.openTagWithNetwork(
+      context,
+      network,
+      forSetup: forSetup,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final surface = Theme.of(context).colorScheme.surface;
 
     return Scaffold(
-      backgroundColor: AppTheme.brandBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: _currentIndex,
         sizing: StackFit.expand,
         children: [
           ScanScreen(
+            key: ScanScreen.scanKey,
             active: _currentIndex == 0,
             onNavigateToNetwork: (id) => _openTagById(id, forSetup: false),
             onNavigateToSetup: (id) => _openTagById(id, forSetup: true),
+            onViewNetworks: () => switchToTab(1),
           ),
-          const NetworksScreen(),
+          NetworksScreen(onScanFirstTag: startHomeScan),
           const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: AppTheme.brandOutline)),
+        decoration: BoxDecoration(
+          color: surface,
+          border: Border(
+            top: BorderSide(color: Theme.of(context).colorScheme.outline),
+          ),
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
@@ -158,8 +173,8 @@ class MainShellState extends State<MainShell> with WidgetsBindingObserver {
             NavigationDestination(
               icon: const Icon(Icons.home_outlined),
               selectedIcon: const Icon(Icons.home_rounded),
-              label: 'Home',
-              tooltip: 'Home',
+              label: l10n.homeTab,
+              tooltip: l10n.homeTab,
             ),
             NavigationDestination(
               icon: const Icon(Icons.wifi_outlined),

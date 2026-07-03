@@ -1,0 +1,19 @@
+# Apache / cPanel config for the Nova App Clip subdomain.
+# Equivalent of the Netlify rules, for shared hosting.
+
+RewriteEngine On
+
+# Apple requires the AASA to be reachable over HTTPS with no redirect.
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# The apple-app-site-association file must be served as application/json
+# (no .json extension, no redirect). Covers both /apple-app-site-association
+# and /.well-known/apple-app-site-association.
+<FilesMatch "^apple-app-site-association$">
+  ForceType application/json
+  Header set Content-Type "application/json"
+</FilesMatch>
+
+# Guest landing page: /wifi -> wifi.html (keeps the #d=... fragment intact).
+RewriteRule ^wifi/?$ /wifi.html [L]

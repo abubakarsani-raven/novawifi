@@ -9,7 +9,6 @@ import '../theme/app_spacing.dart';
 import '../widgets/nfc_prompt_widget.dart';
 import '../widgets/nfc_write_animator.dart';
 import '../utils/factory_admin_entry.dart';
-import '../widgets/nh_logo.dart';
 
 class WipeTagScreen extends StatefulWidget {
   const WipeTagScreen({super.key});
@@ -19,22 +18,11 @@ class WipeTagScreen extends StatefulWidget {
 }
 
 class _WipeTagScreenState extends State<WipeTagScreen> {
-  /// Drives the clear animation: scanning → success (checkmark) / failure (X).
-  /// Null means idle (showing the prompt + a button to start).
   NfcWritePhase? _phase;
   String _failureMessage = '';
 
   @override
-  void initState() {
-    super.initState();
-    // Arm the reader session as soon as the screen opens (mirrors ScanScreen)
-    // so system NFC dispatch is suppressed before the user taps their tag.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _arm());
-  }
-
-  @override
   void dispose() {
-    // Release the reader session/exclusive when leaving the screen.
     NfcService.stopSession();
     super.dispose();
   }
@@ -45,18 +33,11 @@ class _WipeTagScreenState extends State<WipeTagScreen> {
 
     final authOk = await FactoryAdminEntry.requireAuth(context);
     if (!mounted) return;
-    if (!authOk) {
-      Navigator.pop(context);
-      return;
-    }
+    if (!authOk) return;
 
     setState(() => _phase = NfcWritePhase.scanning);
 
-    final result = await NfcService.wipeTag(
-      // The scanning animation is already on screen; nothing extra to show when
-      // the session actually begins.
-      onTapPrompt: () {},
-    );
+    final result = await NfcService.wipeTag(onTapPrompt: () {});
 
     if (result.removedTagId != null) {
       await StorageService.delete(result.removedTagId!);
@@ -66,11 +47,12 @@ class _WipeTagScreenState extends State<WipeTagScreen> {
 
     if (result.status == NfcWipeStatus.success) {
       setState(() => _phase = NfcWritePhase.success);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.wipeTagSuccess)),
+      );
       await Future.delayed(const Duration(milliseconds: 1400));
       if (!mounted) return;
       setState(() => _phase = null);
-      // Re-arm so the operator can clear tags back-to-back without tapping the
-      // button each time (factory batch flow).
       _arm();
     } else {
       final message = switch (result.status) {
@@ -104,7 +86,7 @@ class _WipeTagScreenState extends State<WipeTagScreen> {
       appBar: AppBar(
         title: Text(l10n.wipeTagTitle),
         leading: IconButton(
-          icon: const NhLogo(),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -116,6 +98,13 @@ class _WipeTagScreenState extends State<WipeTagScreen> {
             Text(
               l10n.wipeTagDescription,
               style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.wipeBatchHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Expanded(
@@ -137,7 +126,7 @@ class _WipeTagScreenState extends State<WipeTagScreen> {
             ),
             if (_phase == null)
               NovaPrimaryButton(
-                label: l10n.wipeTagTitle,
+                label: l10n.wipeStartButton,
                 icon: Icons.delete_forever_outlined,
                 onPressed: _arm,
               ),

@@ -104,12 +104,23 @@ class NfcService {
     }
   }
 
-  /// Polls all common tag technologies (NTAG21x is ISO 14443 Type A).
-  static const Set<NfcPollingOption> _pollingOptions = {
-    NfcPollingOption.iso14443,
-    NfcPollingOption.iso15693,
-    NfcPollingOption.iso18092,
-  };
+  /// Polls common tag technologies (NTAG21x is ISO 14443 Type A).
+  ///
+  /// iOS deliberately omits ISO 18092 (FeliCa): Core NFC refuses to start an
+  /// NFCTagReaderSession that polls FeliCa unless the app declares
+  /// `com.apple.developer.nfc.readersession.felica.systemcodes` in Info.plist,
+  /// failing with `readerErrorSecurityViolation: Missing required entitlement`.
+  /// Nova tags are ISO 14443, so FeliCa is unnecessary on iOS.
+  static Set<NfcPollingOption> get _pollingOptions => Platform.isIOS
+      ? const {
+          NfcPollingOption.iso14443,
+          NfcPollingOption.iso15693,
+        }
+      : const {
+          NfcPollingOption.iso14443,
+          NfcPollingOption.iso15693,
+          NfcPollingOption.iso18092,
+        };
 
   /// Stops reader mode. When [releaseExclusive] is false, Android keeps
   /// blocking system NFC handlers until the next session starts.
@@ -175,19 +186,34 @@ class NfcService {
     try {
       await NfcManager.instance.startSession(
         pollingOptions: _pollingOptions,
+        alertMessageIos: 'Hold your iPhone near the Nova tag',
+        onSessionErrorIos: (e) {
+          debugPrint(
+              'Nova NFC: iOS session invalidated — code=${e.code} message=${e.message}');
+          // An OS-side invalidation (user cancel, timeout, first-read) leaves
+          // the plugin's session reference set, so the next scan would throw
+          // "session_already_exists" and surface as "NFC not available". Reset
+          // our state and the plugin's session (deferred to avoid re-entrancy).
+          scheduleMicrotask(
+              () => stopSession(releaseExclusive: releaseExclusiveAfterRead));
+          onError?.call(e);
+        },
         onDiscovered: (NfcTag tag) async {
+          debugPrint('Nova NFC: iOS tag detected');
+          NfcReadResult result;
           try {
-            final result = await _readTag(tag);
-            onRead(result);
+            result = await _readTag(tag);
           } catch (e, st) {
             debugPrint('Nova NFC: read session onDiscovered failed — $e\n$st');
             onError?.call(e);
-            onRead(const NfcReadResult(NfcReadStatus.parseError));
-          } finally {
-            await stopSession(
-              releaseExclusive: releaseExclusiveAfterRead,
-            );
+            result = const NfcReadResult(NfcReadStatus.parseError);
           }
+          // Close the session first, then deliver the result on a fresh
+          // microtask. Running the onRead handler (which navigates) inline
+          // deadlocks the iOS main thread, because the plugin delivers this
+          // callback from a DispatchQueue.main.sync context.
+          await stopSession(releaseExclusive: releaseExclusiveAfterRead);
+          scheduleMicrotask(() => onRead(result));
         },
       );
       debugPrint('Nova NFC: read session started');
@@ -206,8 +232,15 @@ class NfcService {
     }
 
     NdefMessage? message;
+    if (Platform.isIOS) {
+      // iOS: the plugin already reads the tag's NDEF during discovery
+      // (cachedMessage). Issuing a second ndef.read() collides with the
+      // plugin's main-thread dispatch and deadlocks the UI, so reuse the cache
+      // and only fall back to a live read if it's somehow empty.
+      message = ndef.cachedMessage;
+    }
     try {
-      message = await ndef.read();
+      message ??= await ndef.read();
     } catch (_) {
       return const NfcReadResult(NfcReadStatus.tagNotFound);
     }
@@ -404,23 +437,22 @@ class NfcService {
     final novaRecord = _buildNovaDataRecord(jsonEncode(tagJson));
 
     if (_shouldWriteWifiConnectRecord(network)) {
-      if (Platform.isAndroid) {
-        // Guest-first / no app push: WSC record only (+ Nova metadata the
-        // operator app reads). No AAR launcher, so tapping never sends a guest
-        // to the Play Store. Devices that still honour WSC-over-NFC will offer
-        // to join; others show the OS tag viewer. App-less guests use the QR.
-        return NdefMessage(records: [
-          _buildWifiConnectRecord(
-            network.ssid,
-            network.password,
-            network.securityType,
-          ),
-          novaRecord,
-        ]);
-      }
-      // iOS configured: credentials in Nova record for operator reads; guests use QR.
-      final iosNova = _buildNovaDataRecord(jsonEncode(network.toIosTagJson()));
-      return NdefMessage(records: [iosNova]);
+      // Universal configured ("Cube") tag — one tag serves every guest:
+      //  1. credential URL → an iPhone tap opens the App Clip (one-tap join) or
+      //     the web landing page (copy password + QR) as a fallback;
+      //  2. WSC record     → modern Android auto-joins over NFC;
+      //  3. Nova metadata  → the operator app reads it back.
+      // No AAR, so a guest tap never pushes the Play Store. App-less guests on
+      // any device can also scan the printed QR.
+      return NdefMessage(records: [
+        _buildCredentialUriRecord(network),
+        _buildWifiConnectRecord(
+          network.ssid,
+          network.password,
+          network.securityType,
+        ),
+        novaRecord,
+      ]);
     }
 
     // Provisioned-only tag (no credentials yet) — the owner taps to configure.
@@ -448,30 +480,35 @@ class NfcService {
       return 'Text NDEF records are not allowed';
     }
 
-    if (!Platform.isAndroid) return null;
-
     final configured = _shouldWriteWifiConnectRecord(network);
     if (configured) {
-      if (records.length != 2) {
-        return 'Configured Android tags require WSC and Nova records';
+      // Universal configured tag: [credential URI, WSC, Nova]. The URI is first
+      // so an iPhone tap opens the App Clip / landing page; WSC lets Android
+      // auto-join; Nova metadata is for operator read-back.
+      if (records.length != 3) {
+        return 'Configured tags require URL, WSC and Nova records';
+      }
+      if (!_recordIsUri(records[0])) {
+        return 'First record must be the guest URL';
       }
       final wscMime = utf8.encode(WifiWscEncoder.mimeType);
       final novaMime = utf8.encode(NfcConstants.novaDataMimeType);
-      if (!listEquals(records[0].type, wscMime)) {
-        return 'First record must be WSC';
+      if (!listEquals(records[1].type, wscMime)) {
+        return 'Second record must be WSC';
       }
-      if (!listEquals(records[1].type, novaMime)) {
-        return 'Second record must be Nova metadata';
+      if (!listEquals(records[2].type, novaMime)) {
+        return 'Third record must be Nova metadata';
       }
-    } else {
-      // Provisioned tag: the Universal Link is first (so iOS auto-opens), and
-      // an AAR must be present so Android still launches the app on tap.
-      if (!_recordIsUri(records.first)) {
-        return 'Provisioned tags must start with the launch URL';
-      }
-      if (!records.any(_recordIsAar)) {
-        return 'Provisioned Android tags must include an AAR';
-      }
+      return null;
+    }
+
+    // Provisioned tag: the Universal Link is first (so iOS auto-opens). On
+    // Android an AAR must also be present so a tap still launches the app.
+    if (!_recordIsUri(records.first)) {
+      return 'Provisioned tags must start with the launch URL';
+    }
+    if (Platform.isAndroid && !records.any(_recordIsAar)) {
+      return 'Provisioned Android tags must include an AAR';
     }
     return null;
   }
@@ -537,6 +574,30 @@ class NfcService {
   /// carries the tag id so the app lands straight on its setup form.
   static NdefRecord _buildProvisionUriRecord(WifiNetwork network) {
     final fullUrl = '${NfcConstants.appClipBaseUrl}?t=${network.id}&new=1';
+    // 0x04 is the well-known abbreviation for the "https://" prefix.
+    final withoutScheme = fullUrl.replaceFirst('https://', '');
+    return NdefRecord(
+      typeNameFormat: TypeNameFormat.wellKnown,
+      type: utf8.encode('U'),
+      identifier: Uint8List(0),
+      payload: Uint8List.fromList([0x04, ...utf8.encode(withoutScheme)]),
+    );
+  }
+
+  /// Well-known URI record carrying guest credentials for a configured tag.
+  /// The format matches the App Clip and web landing-page decoder
+  /// (ios/NovaClip/WifiConnectView.swift): `…/wifi#d=<base64 JSON {s,p,l}>`.
+  /// Credentials live in the URL *fragment*, which browsers never transmit to a
+  /// server — they are decoded only on the guest's device (same secret already
+  /// stored in the WSC record on the tag).
+  static NdefRecord _buildCredentialUriRecord(WifiNetwork network) {
+    final encoded = base64.encode(utf8.encode(jsonEncode({
+      's': network.ssid,
+      'p': network.password,
+      'l': network.label,
+      't': network.securityType,
+    })));
+    final fullUrl = '${NfcConstants.appClipBaseUrl}#d=$encoded';
     // 0x04 is the well-known abbreviation for the "https://" prefix.
     final withoutScheme = fullUrl.replaceFirst('https://', '');
     return NdefRecord(

@@ -14,6 +14,7 @@ class QrStyleOptions {
   const QrStyleOptions({
     this.dotColor = const Color(0xFF18181B),
     this.rounded = false,
+    this.embedLogo = false,
   });
 
   /// Color applied to both the data modules (dots) and the finder eyes.
@@ -22,13 +23,21 @@ class QrStyleOptions {
   /// When true, dots and eyes are drawn with rounded shapes instead of squares.
   final bool rounded;
 
-  QrStyleOptions copyWith({Color? dotColor, bool? rounded}) {
+  /// When true, the Nova logo is embedded in the center of the code. The code
+  /// is rendered with high error correction so it stays scannable.
+  final bool embedLogo;
+
+  QrStyleOptions copyWith({Color? dotColor, bool? rounded, bool? embedLogo}) {
     return QrStyleOptions(
       dotColor: dotColor ?? this.dotColor,
       rounded: rounded ?? this.rounded,
+      embedLogo: embedLogo ?? this.embedLogo,
     );
   }
 }
+
+/// Logo asset embedded in the center of the QR code when enabled.
+const String kQrLogoAsset = 'assets/branding/icon_ios.png';
 
 class QrCodeWidget extends StatelessWidget {
   const QrCodeWidget({
@@ -92,6 +101,16 @@ class QrCodeWidget extends StatelessWidget {
                 data: data,
                 version: QrVersions.auto,
                 size: 220,
+                // High error correction keeps the code scannable when a logo
+                // covers the center.
+                errorCorrectionLevel: style.embedLogo
+                    ? QrErrorCorrectLevel.H
+                    : QrErrorCorrectLevel.M,
+                embeddedImage:
+                    style.embedLogo ? const AssetImage(kQrLogoAsset) : null,
+                embeddedImageStyle: style.embedLogo
+                    ? const QrEmbeddedImageStyle(size: Size(46, 46))
+                    : null,
                 eyeStyle: QrEyeStyle(
                   eyeShape:
                       style.rounded ? QrEyeShape.circle : QrEyeShape.square,

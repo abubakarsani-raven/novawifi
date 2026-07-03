@@ -118,6 +118,18 @@ abstract class AppLocalizations {
   /// **'Scan QR code'**
   String get scanQrCode;
 
+  /// iOS action that prefills the SSID with the network the phone is connected to.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current Wi‑Fi'**
+  String get useCurrentWifi;
+
+  /// No description provided for @couldNotReadCurrentWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the current Wi‑Fi network'**
+  String get couldNotReadCurrentWifi;
+
   /// Label for the Wi-Fi network name (SSID) field.
   ///
   /// In en, this message translates to:
@@ -255,24 +267,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password must be at least 8 characters'**
   String get errorPasswordTooShort;
-
-  /// No description provided for @adminPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Admin PIN'**
-  String get adminPin;
-
-  /// No description provided for @enterPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your 6-digit PIN'**
-  String get enterPin;
-
-  /// No description provided for @wrongPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Incorrect PIN'**
-  String get wrongPin;
 
   /// No description provided for @settings.
   ///
@@ -454,6 +448,12 @@ abstract class AppLocalizations {
   /// **'Nova Heronix — internal WiFi management'**
   String get aboutFooter;
 
+  /// No description provided for @aboutHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutHeader;
+
   /// No description provided for @syncedToTag.
   ///
   /// In en, this message translates to:
@@ -483,12 +483,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strong'**
   String get passwordStrengthStrong;
-
-  /// No description provided for @firstLaunchSetPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Set a 6-digit admin PIN to protect sensitive actions'**
-  String get firstLaunchSetPin;
 
   /// No description provided for @holdPhoneToTag.
   ///
@@ -598,18 +592,6 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
-  /// No description provided for @changeAdminPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Change admin PIN'**
-  String get changeAdminPin;
-
-  /// No description provided for @newPin.
-  ///
-  /// In en, this message translates to:
-  /// **'New PIN'**
-  String get newPin;
-
   /// No description provided for @copiedToClipboard.
   ///
   /// In en, this message translates to:
@@ -669,12 +651,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your current PIN to reset'**
   String get enterCurrentPinToReset;
-
-  /// No description provided for @settingsLocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter PIN to open settings'**
-  String get settingsLocked;
 
   /// No description provided for @exportQrTitle.
   ///
@@ -807,12 +783,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit SSID and password'**
   String get editCredentials;
-
-  /// No description provided for @viewCredentialsPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter PIN to view credentials'**
-  String get viewCredentialsPin;
 
   /// No description provided for @factoryAdminPin.
   ///
@@ -1047,6 +1017,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional: lock tag before shipping'**
   String get preShipStep5;
+
+  /// No description provided for @homeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTab;
+
+  /// No description provided for @scanReadyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to scan'**
+  String get scanReadyBadge;
+
+  /// No description provided for @scanningForTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning for tags…'**
+  String get scanningForTags;
+
+  /// No description provided for @wifiTagManagerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi Tag Manager'**
+  String get wifiTagManagerTitle;
+
+  /// No description provided for @wifiTagManagerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your saved WiFi networks and export QR codes.'**
+  String get wifiTagManagerSubtitle;
+
+  /// No description provided for @swipeToDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left to delete'**
+  String get swipeToDeleteHint;
+
+  /// No description provided for @noTagsYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get noTagsYetTitle;
+
+  /// No description provided for @noTagsYetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your first Nova Heronix tag from the Home tab.'**
+  String get noTagsYetDescription;
+
+  /// No description provided for @scanFirstTagCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your first tag'**
+  String get scanFirstTagCta;
+
+  /// No description provided for @locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get locked;
+
+  /// No description provided for @exportQrSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Export QR'**
+  String get exportQrSection;
+
+  /// No description provided for @tagActionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag actions'**
+  String get tagActionsSection;
+
+  /// No description provided for @wifiCredentialsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi credentials'**
+  String get wifiCredentialsSection;
+
+  /// No description provided for @securityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get securityLabel;
+
+  /// No description provided for @advancedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advancedSection;
+
+  /// No description provided for @securityTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Security type'**
+  String get securityTypeLabel;
+
+  /// No description provided for @hiddenNetworkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden network'**
+  String get hiddenNetworkLabel;
+
+  /// No description provided for @nearbyNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby networks'**
+  String get nearbyNetworks;
+
+  /// No description provided for @wifiScanAndroidOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi scanning is only available on Android.\nPlease enter the network name manually.'**
+  String get wifiScanAndroidOnly;
+
+  /// No description provided for @wifiScanPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is required to scan for WiFi networks.\nPlease grant it in Settings.'**
+  String get wifiScanPermissionRequired;
+
+  /// No description provided for @wifiScanNoNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'No networks found'**
+  String get wifiScanNoNetworks;
+
+  /// No description provided for @scanningForNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning for networks…'**
+  String get scanningForNetworks;
+
+  /// No description provided for @rescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get rescan;
+
+  /// No description provided for @serviceTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Service tools'**
+  String get serviceTools;
+
+  /// No description provided for @wipeStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start clearing'**
+  String get wipeStartButton;
+
+  /// No description provided for @wipeBatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold each tag to clear. The next tag is ready automatically after success.'**
+  String get wipeBatchHint;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingPage1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your Nova tag'**
+  String get onboardingPage1Title;
+
+  /// No description provided for @onboardingPage1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold your phone to a Nova Heronix NFC tag to set up or manage guest WiFi.'**
+  String get onboardingPage1Body;
+
+  /// No description provided for @onboardingPage2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add WiFi & write to tag'**
+  String get onboardingPage2Title;
+
+  /// No description provided for @onboardingPage2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your network details once. Nova writes them to the tag for one-tap guest access.'**
+  String get onboardingPage2Body;
+
+  /// No description provided for @onboardingPage3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with guests'**
+  String get onboardingPage3Title;
+
+  /// No description provided for @onboardingPage3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Android guests tap to join. iPhone guests scan the QR sticker or use the App Clip.'**
+  String get onboardingPage3Body;
+
+  /// No description provided for @forGuestsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'For guests'**
+  String get forGuestsSection;
+
+  /// No description provided for @forGuestsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code guests can scan to join WiFi'**
+  String get forGuestsSubtitle;
+
+  /// No description provided for @forYouSection.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get forYouSection;
+
+  /// No description provided for @forYouSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials and tag management'**
+  String get forYouSubtitle;
+
+  /// No description provided for @advancedSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Irreversible actions'**
+  String get advancedSectionSubtitle;
+
+  /// No description provided for @deleteSyncedTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete synced tag?'**
+  String get deleteSyncedTagTitle;
+
+  /// No description provided for @deleteSyncedTagMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This tag has been written to NFC. Deleting removes it from this app only — the physical tag is unchanged.'**
+  String get deleteSyncedTagMessage;
+
+  /// No description provided for @tagsNeedSetupBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 tag needs setup} other{{count} tags need setup}}'**
+  String tagsNeedSetupBanner(int count);
+
+  /// No description provided for @tagsNotWrittenBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 tag not written to NFC yet} other{{count} tags not written to NFC yet}}'**
+  String tagsNotWrittenBanner(int count);
+
+  /// No description provided for @viewNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'View networks'**
+  String get viewNetworks;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @nfcPhaseScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for NFC tag'**
+  String get nfcPhaseScanning;
+
+  /// No description provided for @nfcPhaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get nfcPhaseSuccess;
+
+  /// No description provided for @nfcPhaseFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get nfcPhaseFailure;
+
+  /// No description provided for @hiddenNetworkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Network does not broadcast its name'**
+  String get hiddenNetworkSubtitle;
 }
 
 class _AppLocalizationsDelegate

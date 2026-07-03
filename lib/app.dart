@@ -8,6 +8,8 @@ import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
 
 final ValueNotifier<Locale> localeNotifier = ValueNotifier(const Locale('en'));
+final ValueNotifier<ThemeMode> themeModeNotifier =
+    ValueNotifier(ThemeMode.system);
 
 class NovaApp extends StatefulWidget {
   const NovaApp({super.key});
@@ -21,14 +23,17 @@ class _NovaAppState extends State<NovaApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    localeNotifier.addListener(_onLocaleChanged);
+    localeNotifier.addListener(_onRebuild);
+    themeModeNotifier.addListener(_onRebuild);
     _loadLocale();
+    _loadThemeMode();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    localeNotifier.removeListener(_onLocaleChanged);
+    localeNotifier.removeListener(_onRebuild);
+    themeModeNotifier.removeListener(_onRebuild);
     super.dispose();
   }
 
@@ -40,7 +45,7 @@ class _NovaAppState extends State<NovaApp> with WidgetsBindingObserver {
     }
   }
 
-  void _onLocaleChanged() {
+  void _onRebuild() {
     if (mounted) setState(() {});
   }
 
@@ -49,7 +54,6 @@ class _NovaAppState extends State<NovaApp> with WidgetsBindingObserver {
   Future<void> _loadLocale() async {
     final code = await StorageService.loadLocale();
     if (code == null || !mounted) return;
-    // Hausa removed; migrate saved preference to English.
     final normalized = code == 'ha' || !_supportedLocales.contains(code)
         ? 'en'
         : code;
@@ -59,12 +63,26 @@ class _NovaAppState extends State<NovaApp> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _loadThemeMode() async {
+    final mode = await StorageService.loadThemeMode();
+    if (!mounted || mode == null) return;
+    themeModeNotifier.value = switch (mode) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = localeNotifier.value.languageCode;
     return MaterialApp(
       key: const Key('nova_material_app'),
+      debugShowCheckedModeBanner: false,
       title: 'Nova Heronix WiFi Manager',
-      theme: AppTheme.lightFor(localeNotifier.value.languageCode),
+      theme: AppTheme.lightFor(lang),
+      darkTheme: AppTheme.darkFor(lang),
+      themeMode: themeModeNotifier.value,
       locale: localeNotifier.value,
       localeListResolutionCallback: (locales, supportedLocales) {
         final preferred = localeNotifier.value;
@@ -83,7 +101,7 @@ class _NovaAppState extends State<NovaApp> with WidgetsBindingObserver {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const MainShell(),
+      home: MainShell(key: MainShell.shellKey),
     );
   }
 }

@@ -1,0 +1,8 @@
+// Base configuration for the NovaClip App Clip target.
+//
+// Pulls in Flutter's generated build settings so the App Clip's version
+// (MARKETING_VERSION / CURRENT_PROJECT_VERSION) can track the parent app's
+// FLUTTER_BUILD_NAME / FLUTTER_BUILD_NUMBER, which Flutter derives from the
+// `version:` field in pubspec.yaml. App Store validation requires an App Clip's
+// CFBundleShortVersionString and CFBundleVersion to match its parent app.
+#include "../Flutter/Generated.xcconfig"

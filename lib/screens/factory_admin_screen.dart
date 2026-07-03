@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/factory_admin_session.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/nh_logo.dart';
 import 'initialize_tag_screen.dart';
 import 'wipe_tag_screen.dart';
 
@@ -20,7 +19,7 @@ class FactoryAdminScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.factoryAdminTitle),
         leading: IconButton(
-          icon: const NhLogo(),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [

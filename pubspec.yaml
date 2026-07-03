@@ -1,7 +1,7 @@
 name: nova_heronix_wifi_manager
-description: Nova Heronix WiFi Manager — internal tool for managing WiFi credentials on NFC tags.
+description: Nova Heronix WiFi Manager — write, store, and share WiFi network credentials using NFC tags and QR codes.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: ^3.9.2
@@ -36,7 +36,31 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
+  flutter_launcher_icons: ^0.14.0
+  flutter_native_splash: ^2.4.0
 
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - assets/branding/icon_ios.png
+
+flutter_launcher_icons:
+  ios: true
+  image_path_ios: "assets/branding/icon_ios.png"
+  remove_alpha_ios: true
+  android: true
+  image_path_android: "assets/branding/icon_android.png"
+  adaptive_icon_background: "#0084F6"
+  adaptive_icon_foreground: "assets/branding/icon_android_fg.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/branding/splash.png"
+  android_12:
+    image: "assets/branding/splash.png"
+    color: "#FFFFFF"
+  android: true
+  ios: true
+  web: false

@@ -7,10 +7,11 @@ struct WifiCredentials {
     let ssid: String
     let password: String
     let label: String
+    let securityType: String
 
     /// Decodes from the App Clip URL fragment.
     /// Expected format: https://appclip.novaheronix.com/wifi#d=<base64json>
-    /// JSON payload: {"s":"SSID","p":"password","l":"Label"}
+    /// JSON payload: {"s":"SSID","p":"password","l":"Label","t":"WPA2"}
     init?(url: URL) {
         guard
             let fragment = url.fragment,
@@ -24,6 +25,18 @@ struct WifiCredentials {
         ssid = s
         password = json["p"] ?? ""
         label = json["l"] ?? ""
+        securityType = json["t"] ?? "WPA2"
+    }
+
+    /// True when the network has no password (open).
+    var isOpen: Bool {
+        securityType.caseInsensitiveCompare("Open") == .orderedSame
+            || securityType.caseInsensitiveCompare("nopass") == .orderedSame
+            || password.isEmpty
+    }
+
+    var isWEP: Bool {
+        securityType.caseInsensitiveCompare("WEP") == .orderedSame
     }
 }
 
@@ -204,25 +217,33 @@ struct WifiConnectView: View {
     private func connect(creds: WifiCredentials) {
         connectionState = .connecting
 
-        let config = NEHotspotConfiguration(
-            ssid: creds.ssid,
-            passphrase: creds.password,
-            isWEP: false
-        )
+        let config: NEHotspotConfiguration
+        if creds.isOpen {
+            config = NEHotspotConfiguration(ssid: creds.ssid)
+        } else {
+            config = NEHotspotConfiguration(
+                ssid: creds.ssid,
+                passphrase: creds.password,
+                isWEP: creds.isWEP
+            )
+        }
         config.joinOnce = false
 
         NEHotspotConfigurationManager.shared.apply(config) { error in
             DispatchQueue.main.async {
-                if let nfcError = error as? NEHotspotConfigurationError {
-                    switch nfcError {
+                let nsError = error as NSError?
+                if let nsError,
+                   nsError.domain == NEHotspotConfigurationErrorDomain,
+                   let code = NEHotspotConfigurationError(rawValue: nsError.code) {
+                    switch code {
                     case .alreadyAssociated:
                         connectionState = .alreadyConnected
                     case .userDenied:
                         connectionState = .failed("Connection cancelled.")
-                    case .invalid:
+                    case .invalid, .invalidWPAPassphrase, .invalidWEPPassphrase:
                         connectionState = .failed("Invalid network credentials.")
                     default:
-                        connectionState = .failed(nfcError.localizedDescription)
+                        connectionState = .failed(nsError.localizedDescription)
                     }
                 } else if let error {
                     connectionState = .failed(error.localizedDescription)

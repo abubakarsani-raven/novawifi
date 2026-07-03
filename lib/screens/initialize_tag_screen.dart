@@ -6,11 +6,11 @@ import '../models/wifi_network.dart';
 import '../services/nfc_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_components.dart';
+import '../theme/app_theme.dart';
 import '../widgets/nova_sheet.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/nfc_prompt_widget.dart';
 import '../widgets/nfc_write_animator.dart';
-import '../widgets/nh_logo.dart';
 import '../utils/factory_admin_entry.dart';
 import '../utils/nfc_write_status_message.dart';
 import 'setup_tag_screen.dart';
@@ -140,7 +140,7 @@ class _InitializeTagScreenState extends State<InitializeTagScreen> {
               const Icon(
                 Icons.check_circle_outline,
                 size: 72,
-                color: Color(0xFF22C55E),
+                color: AppTheme.brandGreen,
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
@@ -178,7 +178,7 @@ class _InitializeTagScreenState extends State<InitializeTagScreen> {
       appBar: AppBar(
         title: Text(l10n.initializeTag),
         leading: IconButton(
-          icon: const NhLogo(),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
       ),

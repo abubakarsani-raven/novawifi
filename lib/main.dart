@@ -7,6 +7,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await StorageService.init();
+    if (const bool.fromEnvironment('SEED_DEMO')) {
+      await StorageService.seedDemoNetworks();
+    }
   } catch (e) {
     runApp(MaterialApp(
       home: Scaffold(

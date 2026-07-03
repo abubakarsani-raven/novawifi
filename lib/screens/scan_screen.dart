@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/nfc_service.dart';
+import '../services/storage_service.dart';
 import '../theme/app_components.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_theme.dart';
@@ -16,41 +17,51 @@ class ScanScreen extends StatefulWidget {
     required this.active,
     required this.onNavigateToNetwork,
     required this.onNavigateToSetup,
+    required this.onViewNetworks,
   });
+
+  static final GlobalKey<ScanScreenState> scanKey =
+      GlobalKey<ScanScreenState>();
 
   final bool active;
   final void Function(String networkId) onNavigateToNetwork;
   final void Function(String networkId) onNavigateToSetup;
+  final VoidCallback onViewNetworks;
 
   @override
-  State<ScanScreen> createState() => _ScanScreenState();
+  State<ScanScreen> createState() => ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
+class ScanScreenState extends State<ScanScreen> {
   bool _nfcAvailable = true;
 
   /// True only while a one-shot scan the user explicitly started is running.
-  /// Home no longer holds an always-on session — when idle, NFC is owned by the
-  /// Activity's suppress-only reader mode, so the system popup never appears and
-  /// nothing competes with the Setup/Wipe screens.
   bool _scanning = false;
 
   @override
   void initState() {
     super.initState();
     _checkNfc();
+    StorageService.networksRevision.addListener(_onNetworksChanged);
   }
 
   @override
   void dispose() {
+    StorageService.networksRevision.removeListener(_onNetworksChanged);
     if (_scanning) NfcService.stopSession();
     super.dispose();
+  }
+
+  void _onNetworksChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _checkNfc() async {
     final available = await NfcService.isAvailable();
     if (mounted) setState(() => _nfcAvailable = available);
   }
+
+  Future<void> startScan() => _scanOnce();
 
   Future<void> _scanOnce() async {
     if (_scanning || !_nfcAvailable) return;
@@ -95,16 +106,42 @@ class _ScanScreenState extends State<ScanScreen> {
     if (mounted) setState(() => _scanning = false);
   }
 
+  String? _statusBannerMessage(AppLocalizations l10n) {
+    final needsSetup = StorageService.countNeedsSetup();
+    if (needsSetup > 0) {
+      return l10n.tagsNeedSetupBanner(needsSetup);
+    }
+    final notWritten = StorageService.countNotWritten();
+    if (notWritten > 0) {
+      return l10n.tagsNotWrittenBanner(notWritten);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final statusMessage = _statusBannerMessage(l10n);
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: _HeroSection(nfcAvailable: _nfcAvailable, l10n: l10n),
+          child: _HeroSection(
+            nfcAvailable: _nfcAvailable,
+            scanning: _scanning,
+            l10n: l10n,
+          ),
         ),
+        if (statusMessage != null)
+          SliverToBoxAdapter(
+            child: _TappableInfoBanner(
+              icon: Icons.info_outline,
+              message: statusMessage,
+              actionLabel: l10n.viewNetworks,
+              onTap: widget.onViewNetworks,
+            ),
+          ),
         if (!_nfcAvailable)
           SliverToBoxAdapter(
             child: _InfoBanner(
@@ -128,10 +165,11 @@ class _ScanScreenState extends State<ScanScreen> {
               ),
               child: _scanning
                   ? Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
-                          height: 160,
-                          child: NfcPromptWidget(prompt: l10n.holdPhoneToTag),
+                        NfcPromptWidget(
+                          prompt: l10n.holdPhoneToTag,
+                          diameter: 150,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         NovaSecondaryButton(
@@ -195,11 +233,15 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 }
 
-// ─────────────────────────── Hero section ──────────────────────────────────
-
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.nfcAvailable, required this.l10n});
+  const _HeroSection({
+    required this.nfcAvailable,
+    required this.scanning,
+    required this.l10n,
+  });
+
   final bool nfcAvailable;
+  final bool scanning;
   final AppLocalizations l10n;
 
   @override
@@ -215,7 +257,6 @@ class _HeroSection extends StatelessWidget {
       ),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        // Keep the gradient edge-to-edge but push content below the status bar.
         MediaQuery.of(context).padding.top + AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.xl + 8,
@@ -224,7 +265,7 @@ class _HeroSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            nfcAvailable ? l10n.scanHeroTitle : 'WiFi Tag Manager',
+            nfcAvailable ? l10n.scanHeroTitle : l10n.wifiTagManagerTitle,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
@@ -236,7 +277,7 @@ class _HeroSection extends StatelessWidget {
           Text(
             nfcAvailable
                 ? l10n.scanHeroSubtitle
-                : 'Manage your saved WiFi networks and export QR codes.',
+                : l10n.wifiTagManagerSubtitle,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 14,
@@ -244,21 +285,34 @@ class _HeroSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (nfcAvailable) const _PulsingNfcBadge(),
+          if (nfcAvailable)
+            _NfcStatusBadge(
+              scanning: scanning,
+              idleLabel: l10n.scanReadyBadge,
+              scanningLabel: l10n.scanningForTags,
+            ),
         ],
       ),
     );
   }
 }
 
-class _PulsingNfcBadge extends StatefulWidget {
-  const _PulsingNfcBadge();
+class _NfcStatusBadge extends StatefulWidget {
+  const _NfcStatusBadge({
+    required this.scanning,
+    required this.idleLabel,
+    required this.scanningLabel,
+  });
+
+  final bool scanning;
+  final String idleLabel;
+  final String scanningLabel;
 
   @override
-  State<_PulsingNfcBadge> createState() => _PulsingNfcBadgeState();
+  State<_NfcStatusBadge> createState() => _NfcStatusBadgeState();
 }
 
-class _PulsingNfcBadgeState extends State<_PulsingNfcBadge>
+class _NfcStatusBadgeState extends State<_NfcStatusBadge>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
@@ -268,7 +322,23 @@ class _PulsingNfcBadgeState extends State<_PulsingNfcBadge>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
-    )..repeat(reverse: true);
+    );
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(_NfcStatusBadge old) {
+    super.didUpdateWidget(old);
+    if (old.scanning != widget.scanning) _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    if (widget.scanning) {
+      _ctrl.repeat(reverse: true);
+    } else {
+      _ctrl.stop();
+      _ctrl.value = 0;
+    }
   }
 
   @override
@@ -279,13 +349,17 @@ class _PulsingNfcBadgeState extends State<_PulsingNfcBadge>
 
   @override
   Widget build(BuildContext context) {
+    final label =
+        widget.scanning ? widget.scanningLabel : widget.idleLabel;
+    final pulse = widget.scanning ? _ctrl.value : 0.0;
+
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (_, __) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15 + 0.10 * _ctrl.value),
+            color: Colors.white.withValues(alpha: 0.15 + 0.10 * pulse),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.4),
@@ -302,7 +376,7 @@ class _PulsingNfcBadgeState extends State<_PulsingNfcBadge>
               ),
               const SizedBox(width: 6),
               Text(
-                'Scanning for tags…',
+                label,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 13,
@@ -316,8 +390,6 @@ class _PulsingNfcBadgeState extends State<_PulsingNfcBadge>
     );
   }
 }
-
-// ─────────────────────────── Step tile ─────────────────────────────────────
 
 class _StepTile extends StatelessWidget {
   const _StepTile({
@@ -338,9 +410,9 @@ class _StepTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppTheme.brandWhite,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.brandOutline),
+        border: Border.all(color: theme.colorScheme.outline),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,8 +461,6 @@ class _StepTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────── Info banner ───────────────────────────────────
-
 class _InfoBanner extends StatelessWidget {
   const _InfoBanner({required this.icon, required this.message});
 
@@ -416,11 +486,64 @@ class _InfoBanner extends StatelessWidget {
             child: Text(
               message,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF92400E),
+                color: AppTheme.brandAmberDark,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TappableInfoBanner extends StatelessWidget {
+  const _TappableInfoBanner({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: AppTheme.brandAmberSurface,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 4,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: AppTheme.brandAmberDark),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.brandAmberDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                actionLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppTheme.brandPurple,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

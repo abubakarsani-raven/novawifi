@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'dart:io';
+
 import '../l10n/app_localizations.dart';
 import '../models/wifi_network.dart';
 import '../services/nfc_service.dart';
 import '../services/storage_service.dart';
+import '../services/wifi_scan_service.dart' show WifiScanService;
 import '../utils/nfc_write_status_message.dart';
 import '../widgets/nova_sheet.dart';
 import '../theme/app_components.dart';
@@ -61,6 +64,20 @@ class _SetupTagScreenState extends State<SetupTagScreen> {
       _ssidController.text = result.ssid;
       _securityType = result.securityType;
     });
+  }
+
+  /// iOS: prefill the SSID with the network this device is connected to.
+  Future<void> _useCurrentWifi() async {
+    final l10n = AppLocalizations.of(context)!;
+    final ssid = await WifiScanService.currentSsid();
+    if (!mounted) return;
+    if (ssid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.couldNotReadCurrentWifi)),
+      );
+      return;
+    }
+    setState(() => _ssidController.text = ssid);
   }
 
   Future<void> _saveAndWrite() async {
@@ -223,11 +240,19 @@ class _SetupTagScreenState extends State<SetupTagScreen> {
                               decoration: InputDecoration(
                                 labelText: l10n.networkName,
                                 prefixIcon: const Icon(Icons.wifi_outlined),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.wifi_find_outlined),
-                                  tooltip: 'Scan nearby networks',
-                                  onPressed: _scanWifi,
-                                ),
+                                suffixIcon: Platform.isIOS
+                                    ? IconButton(
+                                        icon: const Icon(
+                                            Icons.my_location_outlined),
+                                        tooltip: l10n.useCurrentWifi,
+                                        onPressed: _useCurrentWifi,
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(
+                                            Icons.wifi_find_outlined),
+                                        tooltip: 'Scan nearby networks',
+                                        onPressed: _scanWifi,
+                                      ),
                               ),
                               validator: (v) => v == null || v.trim().isEmpty
                                   ? l10n.networkName
@@ -257,7 +282,7 @@ class _SetupTagScreenState extends State<SetupTagScreen> {
                                 tilePadding: EdgeInsets.zero,
                                 childrenPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.tune_rounded),
-                                title: const Text('Advanced'),
+                                title: Text(l10n.advancedSection),
                                 children: [
                                   TextFormField(
                                     controller: _labelController,
@@ -271,9 +296,10 @@ class _SetupTagScreenState extends State<SetupTagScreen> {
                                   DropdownButtonFormField<String>(
                                     key: ValueKey(_securityType),
                                     initialValue: _securityType,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Security type',
-                                      prefixIcon: Icon(Icons.lock_outline),
+                                    decoration: InputDecoration(
+                                      labelText: l10n.securityTypeLabel,
+                                      prefixIcon:
+                                          const Icon(Icons.lock_outline),
                                     ),
                                     items: _securityTypes
                                         .map((t) => DropdownMenuItem(
@@ -286,9 +312,8 @@ class _SetupTagScreenState extends State<SetupTagScreen> {
                                     value: _isHidden,
                                     onChanged: (v) =>
                                         setState(() => _isHidden = v),
-                                    title: const Text('Hidden network'),
-                                    subtitle: const Text(
-                                        'Network does not broadcast its name'),
+                                    title: Text(l10n.hiddenNetworkLabel),
+                                    subtitle: Text(l10n.hiddenNetworkSubtitle),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                 ],

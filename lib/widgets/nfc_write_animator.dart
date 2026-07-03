@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'animated_checkmark.dart';
 import 'nfc_prompt_widget.dart';
 
@@ -72,7 +74,7 @@ class _NfcWriteAnimatorState extends State<NfcWriteAnimator>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const AnimatedCheckmark(
-          color: Color(0xFF22C55E),
+          color: AppTheme.brandGreen,
           size: 110,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -82,7 +84,7 @@ class _NfcWriteAnimatorState extends State<NfcWriteAnimator>
             widget.successLabel,
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF16A34A),
+              color: AppTheme.brandGreenDark,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -135,22 +137,33 @@ class _NfcWriteAnimatorState extends State<NfcWriteAnimator>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 320),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.88, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOut),
+    final l10n = AppLocalizations.of(context)!;
+    final semanticsLabel = switch (widget.phase) {
+      NfcWritePhase.scanning => l10n.nfcPhaseScanning,
+      NfcWritePhase.success => l10n.nfcPhaseSuccess,
+      NfcWritePhase.failure => l10n.nfcPhaseFailure,
+    };
+
+    return Semantics(
+      liveRegion: true,
+      label: semanticsLabel,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.88, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            ),
+            child: child,
           ),
-          child: child,
         ),
+        child: switch (widget.phase) {
+          NfcWritePhase.scanning => _scanningState(),
+          NfcWritePhase.success => _successState(context),
+          NfcWritePhase.failure => _failureState(context),
+        },
       ),
-      child: switch (widget.phase) {
-        NfcWritePhase.scanning => _scanningState(),
-        NfcWritePhase.success  => _successState(context),
-        NfcWritePhase.failure  => _failureState(context),
-      },
     );
   }
 }

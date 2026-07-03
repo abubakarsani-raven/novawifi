@@ -69,6 +69,17 @@ class QrStylePicker extends StatelessWidget {
           onSelectionChanged: (selection) =>
               onChanged(style.copyWith(rounded: selection.first)),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text('Center logo', style: theme.textTheme.labelMedium),
+          subtitle: Text(
+            'Place the Nova logo in the middle of the code',
+            style: theme.textTheme.bodySmall,
+          ),
+          value: style.embedLogo,
+          onChanged: (v) => onChanged(style.copyWith(embedLogo: v)),
+        ),
       ],
     );
   }

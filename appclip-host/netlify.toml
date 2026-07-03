@@ -6,6 +6,13 @@
   status = 200
   force = true
 
+# Guest landing page. iPhones with the App Clip registered get the App Clip
+# card instead; this page is the universal fallback (Safari / Android browser).
+[[redirects]]
+  from = "/wifi"
+  to = "/wifi.html"
+  status = 200
+
 [[headers]]
   for = "/.well-known/apple-app-site-association"
   [headers.values]

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
@@ -25,6 +26,22 @@ class WifiNetwork {
 
 class WifiScanService {
   WifiScanService._();
+
+  static const _channel = MethodChannel('com.novaheronix.wifimanager/nfc');
+
+  /// iOS only: returns the SSID of the network this device is currently joined
+  /// to, or null if unavailable/denied. iOS exposes this only after the user
+  /// grants Location ("When in Use") permission. Android uses [scan] instead.
+  static Future<String?> currentSsid() async {
+    if (!Platform.isIOS) return null;
+    try {
+      final ssid = await _channel.invokeMethod<String>('getCurrentWifiSsid');
+      if (ssid == null || ssid.trim().isEmpty) return null;
+      return ssid.trim();
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Returns null if scanning is not supported or permission denied.
   /// Returns empty list if no networks found.

@@ -18,6 +18,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrCode => 'Scan QR code';
 
   @override
+  String get useCurrentWifi => 'Use current Wi‑Fi';
+
+  @override
+  String get couldNotReadCurrentWifi =>
+      'Couldn\'t read the current Wi‑Fi network';
+
+  @override
   String get networkName => 'Network name (SSID)';
 
   @override
@@ -85,15 +92,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPasswordTooShort => 'Password must be at least 8 characters';
-
-  @override
-  String get adminPin => 'Admin PIN';
-
-  @override
-  String get enterPin => 'Enter your 6-digit PIN';
-
-  @override
-  String get wrongPin => 'Incorrect PIN';
 
   @override
   String get settings => 'Settings';
@@ -191,6 +189,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutFooter => 'Nova Heronix — internal WiFi management';
 
   @override
+  String get aboutHeader => 'About';
+
+  @override
   String get syncedToTag => 'Synced to tag';
 
   @override
@@ -204,10 +205,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordStrengthStrong => 'Strong';
-
-  @override
-  String get firstLaunchSetPin =>
-      'Set a 6-digit admin PIN to protect sensitive actions';
 
   @override
   String get holdPhoneToTag => 'Hold your phone against the tag';
@@ -269,12 +266,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
-  String get changeAdminPin => 'Change admin PIN';
-
-  @override
-  String get newPin => 'New PIN';
-
-  @override
   String get copiedToClipboard => 'Copied to clipboard';
 
   @override
@@ -303,9 +294,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterCurrentPinToReset => 'Enter your current PIN to reset';
-
-  @override
-  String get settingsLocked => 'Enter PIN to open settings';
 
   @override
   String get exportQrTitle => 'Export QR code';
@@ -382,9 +370,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editCredentials => 'Edit SSID and password';
-
-  @override
-  String get viewCredentialsPin => 'Enter PIN to view credentials';
 
   @override
   String get factoryAdminPin => 'Service code';
@@ -513,4 +498,188 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get preShipStep5 => 'Optional: lock tag before shipping';
+
+  @override
+  String get homeTab => 'Home';
+
+  @override
+  String get scanReadyBadge => 'Ready to scan';
+
+  @override
+  String get scanningForTags => 'Scanning for tags…';
+
+  @override
+  String get wifiTagManagerTitle => 'WiFi Tag Manager';
+
+  @override
+  String get wifiTagManagerSubtitle =>
+      'Manage your saved WiFi networks and export QR codes.';
+
+  @override
+  String get swipeToDeleteHint => 'Swipe left to delete';
+
+  @override
+  String get noTagsYetTitle => 'No tags yet';
+
+  @override
+  String get noTagsYetDescription =>
+      'Scan your first Nova Heronix tag from the Home tab.';
+
+  @override
+  String get scanFirstTagCta => 'Scan your first tag';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String get exportQrSection => 'Export QR';
+
+  @override
+  String get tagActionsSection => 'Tag actions';
+
+  @override
+  String get wifiCredentialsSection => 'WiFi credentials';
+
+  @override
+  String get securityLabel => 'Security';
+
+  @override
+  String get advancedSection => 'Advanced';
+
+  @override
+  String get securityTypeLabel => 'Security type';
+
+  @override
+  String get hiddenNetworkLabel => 'Hidden network';
+
+  @override
+  String get nearbyNetworks => 'Nearby networks';
+
+  @override
+  String get wifiScanAndroidOnly =>
+      'WiFi scanning is only available on Android.\nPlease enter the network name manually.';
+
+  @override
+  String get wifiScanPermissionRequired =>
+      'Location permission is required to scan for WiFi networks.\nPlease grant it in Settings.';
+
+  @override
+  String get wifiScanNoNetworks => 'No networks found';
+
+  @override
+  String get scanningForNetworks => 'Scanning for networks…';
+
+  @override
+  String get rescan => 'Rescan';
+
+  @override
+  String get serviceTools => 'Service tools';
+
+  @override
+  String get wipeStartButton => 'Start clearing';
+
+  @override
+  String get wipeBatchHint =>
+      'Hold each tag to clear. The next tag is ready automatically after success.';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingGetStarted => 'Get started';
+
+  @override
+  String get onboardingPage1Title => 'Scan your Nova tag';
+
+  @override
+  String get onboardingPage1Body =>
+      'Hold your phone to a Nova Heronix NFC tag to set up or manage guest WiFi.';
+
+  @override
+  String get onboardingPage2Title => 'Add WiFi & write to tag';
+
+  @override
+  String get onboardingPage2Body =>
+      'Enter your network details once. Nova writes them to the tag for one-tap guest access.';
+
+  @override
+  String get onboardingPage3Title => 'Share with guests';
+
+  @override
+  String get onboardingPage3Body =>
+      'Android guests tap to join. iPhone guests scan the QR sticker or use the App Clip.';
+
+  @override
+  String get forGuestsSection => 'For guests';
+
+  @override
+  String get forGuestsSubtitle => 'QR code guests can scan to join WiFi';
+
+  @override
+  String get forYouSection => 'For you';
+
+  @override
+  String get forYouSubtitle => 'Credentials and tag management';
+
+  @override
+  String get advancedSectionSubtitle => 'Irreversible actions';
+
+  @override
+  String get deleteSyncedTagTitle => 'Delete synced tag?';
+
+  @override
+  String get deleteSyncedTagMessage =>
+      'This tag has been written to NFC. Deleting removes it from this app only — the physical tag is unchanged.';
+
+  @override
+  String tagsNeedSetupBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags need setup',
+      one: '1 tag needs setup',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tagsNotWrittenBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags not written to NFC yet',
+      one: '1 tag not written to NFC yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get viewNetworks => 'View networks';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get nfcPhaseScanning => 'Waiting for NFC tag';
+
+  @override
+  String get nfcPhaseSuccess => 'Success';
+
+  @override
+  String get nfcPhaseFailure => 'Failed';
+
+  @override
+  String get hiddenNetworkSubtitle => 'Network does not broadcast its name';
 }
